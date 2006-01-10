@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+
+import socket, sys, getopt
+
+#
+# Options: -s <hostServer>
+#          -p <host port>
+#          -h <hostname to add>
+#          -n <number of cpus>
+#          -i <power index>
+# All are optional.  If -h is not given, then the hostname of the host
+# that this script is executed on is used.
+#
+# Note: if you supply the hostname without the -h before it, then you
+# have to make it the last item in the command line.
+#
+
+opts, args_proper = getopt.getopt(sys.argv[1:], "s:p:h:n:i:")
+
+# Default values.
+hostServer = 'wrasse'
+hostPort = 6716
+addHost = ""
+sendStr = ""
+powerIndex = 0
+numCpus = 0
+
+#
+# opts is a list of pairs: (option, parameter)
+#
+for option, param in opts:
+    if option == "-s":
+        hostServer = param
+    elif option == "-p":
+        hostPort = int(param)
+    elif option == "-h":
+        addHost = param
+    elif option == "-i":
+        powerIndex = param
+    elif option == "-n":
+        numCpus = param
+
+if args_proper:
+    if addHost:
+        print >>sys.stderr, "Unknown option: ", args_proper
+        sys.exit(1)
+    addHost = args_proper.pop(0)
+
+sendStr = " up"
+if powerIndex != 0:
+    sendStr = "%s -i %s" % (sendStr, powerIndex)
+if numCpus != 0:
+    sendStr = "%s -n %s" % (sendStr, numCpus)
+
+#
+# Note: we always send the IP address of the host to the host-server.
+#
+if addHost == "":
+    if len(args_proper) != 0:
+        addHost = socket.gethostbyname(args_proper[0])
+    else:
+        addHost = socket.gethostbyname(socket.getfqdn(socket.gethostname()))
+else:
+    addHost = socket.gethostbyname(addHost)
+
+print "addhost: adding host", addHost, "to compilation farm."
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((hostServer, hostPort))
+sock.send(addHost + sendStr)
+sock.close()

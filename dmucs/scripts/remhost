@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+
+import socket, sys, getopt
+
+
+#
+# Options: -s <hostServer>
+#          -p <host port>
+#          -h <hostname to remove>
+# All are optional.  If -h is not given, then the hostname of the host
+# that this script is executed on is used.
+#
+
+opts, args_proper = getopt.getopt(sys.argv[1:], "s:p:h:")
+
+# Default values.
+hostServer = 'wrasse'
+hostPort = 6716
+host = ""
+
+#
+# opts is a list of pairs: (option, parameter)
+#
+for option, param in opts:
+    if option == "-s":
+        hostServer = param
+    elif option == "-p":
+        hostPort = int(param)
+    elif option == "-h":
+        host = param
+
+#
+# Note: we always send the IP address of the host to the host-server.
+#
+if host == "":
+    if len(args_proper) != 0:
+        host = socket.gethostbyname(args_proper[0])
+    else:
+        host = socket.gethostbyname(socket.getfqdn(socket.gethostname()))
+else:
+    host = socket.gethostbyname(host)
+
+print "remhost: removing host", host, "from compilation farm."
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((hostServer, hostPort))
+sock.send(host + " down ")
+sock.close()

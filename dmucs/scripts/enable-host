@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+import socket, sys, getopt, os
+
+
+#
+# Options:
+#          -h <hostname to add>
+# All are optional.  If -h is not given, then the hostname of the host
+# that this script is executed on is used.
+#
+
+opts, args_proper = getopt.getopt(sys.argv[1:], "h:")
+
+# Default values.
+host = ""
+
+#
+# opts is a list of pairs: (option, parameter)
+#
+for option, param in opts:
+    if option == "-h":
+        host = param
+
+#
+# Note: we always send the IP address of the host to the host-server.
+#
+if host == "":
+    # The user typed enable-host <hostname>: we'll accept it.
+    if len(args_proper) != 0:
+        host = socket.gethostbyname(args_proper[0])
+    else:
+        host = socket.gethostbyname(socket.getfqdn(socket.gethostname()))
+else:
+    host = socket.gethostbyname(host)
+
+hostname = socket.gethostbyaddr(host)[0]
+
+print "enabling host", hostname
+
+cmd = "/us/bfsbld/Compilers/distcc/bin/distccd --daemon --log-file=/us/bfsbld/Compilers/distcc/log/" + \
+      hostname + ".log --pid-file /us/bfsbld/Compilers/distcc/pids/" + host + \
+      ".pid --allow 0.0.0.0/0"
+os.system(cmd)
+os.system("/us/norman/dmucs/solaris/loadavg " + host + " &")
+

@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+import socket, sys, getopt, os
+
+
+#
+# Options:
+#          -h <hostname to add>
+# All are optional.  If -h is not given, then the hostname of the host
+# that this script is executed on is used.
+#
+
+opts, args_proper = getopt.getopt(sys.argv[1:], "h:")
+
+# Default values.
+host = ""
+
+#
+# opts is a list of pairs: (option, parameter)
+#
+for option, param in opts:
+    if option == "-h":
+        host = param
+
+#
+# Note: we always send the IP address of the host to the host-server.
+#
+if host == "":
+    # The user typed enable-host <hostname>: we'll accept it.
+    if len(args_proper) != 0:
+        host = socket.gethostbyname(args_proper[0])
+    else:
+        host = socket.gethostbyname(socket.getfqdn(socket.gethostname()))
+else:
+    host = socket.gethostbyname(host)
+
+
+print "disabling host " + host
+
+
+cmd = "/bin/ps -ef | /bin/grep 'loadavg' | /usr/bin/awk '{print $2}' | /usr/bin/xargs /bin/kill"
+os.system(cmd)
+os.system("/bin/kill -TERM `cat /us/bfsbld/Compilers/distcc/pids/" + host + ".pid`")
