@@ -24,7 +24,7 @@
 #include <map>
 #include <string>
 
-#define HOSTS_INFO_FILE "/us/norman/hosts-info"
+#define HOSTS_INFO_FILE "hosts-info"
 
 
 class DmucsHostsFile

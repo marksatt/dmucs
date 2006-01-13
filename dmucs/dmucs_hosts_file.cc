@@ -18,7 +18,7 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-
+#include "dmucs.h"
 #include "dmucs_hosts_file.h"
 #include <fstream>
 #include <iostream>
@@ -59,7 +59,9 @@ DmucsHostsFile::readFileIntoDb() const
 
     std::ifstream instr(HOSTS_INFO_FILE);
     if (!instr) {
-	throw std::bad_alloc();
+	DMUCS_DEBUG((stderr, "Unable to open hosts-info file \"%s\"\n",
+		     HOSTS_INFO_FILE));
+	return;
     }
 
     for (int lineno = 1; ; lineno++) {

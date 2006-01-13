@@ -67,8 +67,10 @@ main(int argc, char *argv[])
      * o Close the client socket.
      */
 
+#ifndef __CYGWIN__
     /* install a SIGCHLD handler */
     sigset(SIGCHLD, sigchld_handler);
+#endif
 
     /*
      * Process command-line arguments:
@@ -169,21 +171,25 @@ main(int argc, char *argv[])
 	unsigned int cpuIpAddr = inet_addr(remCompHostName);
 	struct in_addr c;
 	c.s_addr = cpuIpAddr;
-	struct hostent he, *res;
+	struct hostent he, *res = 0;
 	int myerrno;
 	char buffer[128];
+	int res8 = 0;
+#if HAVE_GETHOSTBYADDR_R
 #if HAVE_GETHOSTBYADDR_R_7_ARGS
 	res = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
 			      &he, buffer, 128, &myerrno);
-	resolved_name = (res == NULL) ? inet_ntoa(c) : he.h_name;
 #elif HAVE_GETHOSTBYADDR_R_8_ARGS
-	int res8 =
-	    gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
-			    &he, buffer, 128, &res, &myerrno);
-	resolved_name = (res == NULL || res8 != 0) ? inet_ntoa(c) : he.h_name;
+	res8 = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
+			       &he, buffer, 128, &res, &myerrno);
 #else
 #error HELP -- do not know how to compile gethostbyaddr_r
+#endif /* HAVE_GETHOSTBYADDR_R_X_ARGS */
+#elif HAVE_GETHOSTBYADDR
+	res = gethostbyaddr((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET);
 #endif
+	resolved_name = (res == NULL || res8 != 0) ?
+	    inet_ntoa(c) : he.h_name;
 
 	/*
 	 * Add /100 to the end of the DISTCC_HOSTS value.  This tells

@@ -51,6 +51,11 @@ void *doSilentSearch(void *bogus);
 void *updateStats(void *bogus);
 void usage(const char *prog);
 
+#ifndef HAVE_GETHOSTBYADDR_R
+#ifdef HAVE_GETHOSTBYADDR
+pthread_mutex_t gethost_mutex; 
+#endif /* HAVE_GETHOSTBYADDR */
+#endif /* !HAVE_GETHOSTBYADDR_R */
 
 bool debugMode = false;
 
@@ -94,6 +99,13 @@ main(int argc, char *argv[])
 
     int serverPortNum = SERVER_PORT_NUM;
     bool daemonMode = true;
+
+#ifndef HAVE_GETHOSTBYADDR_R
+#ifdef HAVE_GETHOSTBYADDR
+       pthread_mutex_init(&gethost_mutex,NULL);
+#endif /* HAVE_GETHOSTBYADDR */
+#endif /* !HAVE_GETHOSTBYADDR_R */
+
 
     for (int i = 1; i < argc; i++) {
 	if (strequ("-p", argv[i]) || strequ("--port", argv[i])) {
@@ -233,6 +245,13 @@ main(int argc, char *argv[])
 	delete req;
 
     }
+
+#ifndef HAVE_GETHOSTBYADDR_R
+#ifdef HAVE_GETHOSTBYADDR
+    pthread_mutex_destroy(&gethost_mutex);
+#endif /* HAVE_GETHOSTBYADDR */
+#endif /* !HAVE_GETHOSTBYADDR_R */
+
 }
 
 
@@ -252,22 +271,32 @@ getHostForClient(void *data)
 	unsigned int cpuIpAddr = db->getBestAvailCpu();
 	struct in_addr c;
 	c.s_addr = cpuIpAddr;
-	struct hostent he, *res;
+	struct hostent he, *res = 0;
 	char buffer[128];
 	int myerrno;
-	std::string resolved_name;
+	int res8 = 0;
+
+#if HAVE_GETHOSTBYADDR_R
 #if HAVE_GETHOSTBYADDR_R_7_ARGS
 	res = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
 			      &he, buffer, 128, &myerrno);
-	resolved_name = (res == NULL) ? inet_ntoa(c) : he.h_name;
 #elif HAVE_GETHOSTBYADDR_R_8_ARGS
-	int res8 =
-	    gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
-			    &he, buffer, 128, &res, &myerrno);
-	resolved_name = (res == NULL || res8 != 0) ? inet_ntoa(c) : he.h_name;
+	res8 = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
+			       &he, buffer, 128, &res, &myerrno);
 #else
 #error HELP -- do not know how to compile gethostbyaddr_r
+#endif /* HAVE_GETHOSTBYADDR_R_X_ARGS */
+#elif HAVE_GETHOSTBYADDR
+	pthread_mutex_lock(&gethost_mutex);
+	res = gethostbyaddr((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET);
+	strncpy(buffer,res->h_name, sizeof(buffer));
+	buffer[sizeof(buffer)] = 0;
+	res->h_name = buffer;
+	pthread_mutex_unlock(&gethost_mutex);
 #endif
+	std::string resolved_name =
+	    (res == NULL || res8 != 0) ? inet_ntoa(c) : he.h_name;
+
 	fprintf(stderr, "Giving out %s\n", resolved_name.c_str());
 
 	/* getBestAvailCpu() might return 0, when there are
