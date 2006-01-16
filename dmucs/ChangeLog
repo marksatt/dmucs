@@ -1,0 +1,6 @@
+
+0.1 -- Initial release.
+
+0.2 -- Thanks to Patrik Olesen for code to eliminate most pthread forks,
+       and for the -H option to the server to point to the hosts-info file.
+    -- made a few changes to store resolve IP names in the DmucsHost object.
