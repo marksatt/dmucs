@@ -30,17 +30,7 @@ extern bool debugMode;
 #define strequ(x, y) (strncmp(x, y, strlen(x)) == 0)
 
 
-#define SERVER_MACH_NAME	"swbuild-linux1.eng.fore.com"
+#define SERVER_MACH_NAME	"localhost"
 #define SERVER_PORT_NUM 9714
-
-#include "COSMIC/HDR/sockets.h"
-
-struct dmucs_pthread_info_t
-{
-    unsigned int clientIpAddr;
-    Socket *sock;
-    dmucs_pthread_info_t(unsigned int c, Socket *s) :
-	clientIpAddr(c), sock(s) {}
-};
 
 #endif

@@ -33,17 +33,18 @@
 DmucsHostsFile *DmucsHostsFile::instance_ = NULL;
 
 
-DmucsHostsFile *DmucsHostsFile::getInstance()
+DmucsHostsFile *DmucsHostsFile::getInstance(const std::string &file)
 {
     if (instance_ == NULL) {
-	instance_ = new DmucsHostsFile();
+	instance_ = new DmucsHostsFile(file);
     }
     return instance_;
 }
 
 
-DmucsHostsFile::DmucsHostsFile() :
-    lastFileChangeTime_(0)
+DmucsHostsFile::DmucsHostsFile(const std::string &hostsInfoFile) :
+    lastFileChangeTime_(0),
+    hostsInfoFile_(hostsInfoFile)
 {
     readFileIntoDb();
     /* We know the file has changed since time 0 -- so just call this
@@ -57,10 +58,10 @@ DmucsHostsFile::readFileIntoDb() const
 {
     db_.clear();
 
-    std::ifstream instr(HOSTS_INFO_FILE);
+    std::ifstream instr(hostsInfoFile_.c_str());
     if (!instr) {
 	DMUCS_DEBUG((stderr, "Unable to open hosts-info file \"%s\"\n",
-		     HOSTS_INFO_FILE));
+		     hostsInfoFile_.c_str()));
 	return;
     }
 
@@ -94,7 +95,7 @@ DmucsHostsFile::readFileIntoDb() const
 	if (sscanf(line.c_str(), "%s %d %d", machine, &numcpus,
 		   &powerIndex) != 3) {
 	    std::cout << "Bad input in line " << lineno << " of file " <<
-		HOSTS_INFO_FILE << std::endl;
+		hostsInfoFile_ << std::endl;
 	    break;
 	}
 
@@ -155,7 +156,7 @@ bool
 DmucsHostsFile::hasFileChanged() const
 {
     struct stat st;
-    if (stat(HOSTS_INFO_FILE, &st) != 0) {
+    if (stat(hostsInfoFile_.c_str(), &st) != 0) {
 	return true;		// assume the file has changed...
     }
 

@@ -26,6 +26,7 @@
 #include <exception>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <string>
 
 
 enum host_status_t {
@@ -50,6 +51,7 @@ private:
     // host_status_t 	status_;
     DmucsHostState *	state_;
     struct in_addr 	ipAddr_;
+    std::string		resolvedName_;
     int 		ncpus_;
     int			pindex_;
     float		ldavg1_, ldavg5_, ldavg10_;
@@ -69,16 +71,21 @@ public:
     void silent();
     void overloaded();
 
-    static DmucsHost *createHost(const struct in_addr &ipAddr);
+    static DmucsHost *createHost(const struct in_addr &ipAddr,
+				 const std::string &hostsInfoFile);
 
     const int getStateAsInt() const;
     int getTier() const;
     int calcTier(float ldavg1, float ldavg5, float ldavg10, int pindex) const;
+    std::string getName();
 
     unsigned int getIpAddrInt() const { return ipAddr_.s_addr; }
     int getNumCpus() const { return ncpus_; }
     bool seemsDown() const;
     bool isUnavailable() const;
+
+    static std::string resolveIp2Name(unsigned int ipAddr);
+
 
     void dump();
 };

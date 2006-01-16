@@ -51,6 +51,13 @@ private:
     typedef dmucs_avail_cpus_t::iterator dmucs_avail_cpus_iter_t;
     typedef dmucs_avail_cpus_t::reverse_iterator dmucs_avail_cpus_riter_t;
 
+    /* This is a mapping from sock address to host ip address -- the socket
+       of the connection from the "gethost" application to the dmucs server,
+       and the hostip of the cpu assigned to the "gethost" application. */
+    typedef std::map<const unsigned int, const unsigned int>
+    		dmucs_assigned_cpus_t;
+    typedef dmucs_assigned_cpus_t::iterator dmucs_assigned_cpus_iter_t;
+
     /* 
      * Databases of hosts.
      * o a collection of available hosts, sorted by tier.
@@ -70,7 +77,7 @@ private:
     dmucs_host_set_t	overloadedHosts_;// overloaded hosts are here.
 
     dmucs_avail_cpus_t	availCpus_;	// unassigned cpus are here.
-    dmucs_cpus_t	assignedCpus_;	// assigned cpus are here.
+    dmucs_assigned_cpus_t assignedCpus_; // assigned cpus are here.
 
     /* Statistics */
     int numAssignedCpus_;	/* the # of assigned CPUs during a collection

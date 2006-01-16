@@ -18,6 +18,7 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include "dmucs.h"
 #include "dmucs_db.h"
 #include <algorithm>
 #include <stdio.h>
@@ -122,12 +123,16 @@ DmucsDb::getBestAvailCpu()
 
 void
 DmucsDb::assignCpuToClient(const unsigned int hostIp,
-			   const unsigned int clientIp)
+			   const unsigned int sock)
 {
-    MutexMonitor m(&mutex_);
-    // NOTE: we don't currently do anything with the clientIp.
-    assignedCpus_.push_front(hostIp);
+    struct in_addr t2;
+    t2.s_addr = hostIp;
 
+    DMUCS_DEBUG((stderr, "assignCpu hostip %s\n", inet_ntoa(t2)));
+
+    MutexMonitor m(&mutex_);
+
+    assignedCpus_.insert(std::make_pair(sock, hostIp));
     numAssignedCpus_++;
 
     int t;
@@ -138,35 +143,43 @@ DmucsDb::assignCpuToClient(const unsigned int hostIp,
 
 
 void
-DmucsDb::releaseCpu(const unsigned int hostIp)
+DmucsDb::releaseCpu(const unsigned int sock)
 {
     MutexMonitor m(&mutex_);
-    for (dmucs_cpus_iter_t itr = assignedCpus_.begin();
-	 itr != assignedCpus_.end(); ++itr) {
-	if (*itr == hostIp) {
-	    assignedCpus_.erase(itr);
-	    struct in_addr in;
-	    in.s_addr = hostIp;
-	    try {
-		DmucsHost *host = getHost(in);
-		/* The host may be marked unavailable while one of the cpus
-		   was assigned.  In this case, don't add the cpu back. */
-		if (host->getStateAsInt() == STATUS_AVAILABLE) {
-		    int tier = host->getTier();
-		    addCpusToTier(tier, hostIp, 1);
-		}
-	    } catch (DmucsHostNotFound &e) {
-		/* The host may have been removed from the db while a cpu
-		   was assigned.  In this case, just don't add the cpu back
-		   to the availCpus_ db table. */
-	    }
-	    return;
-	}
+
+    DMUCS_DEBUG((stderr, "releaseCpu for socket 0x%x\n", sock));
+
+    dmucs_assigned_cpus_iter_t itr = assignedCpus_.find(sock);
+    if (itr == assignedCpus_.end()) {
+	DMUCS_DEBUG((stderr,"No cpu found in assignedCpus for sock 0x%x\n",
+		     sock));
+	return;
     }
+    unsigned int hostIp = itr->second;
+    assignedCpus_.erase(itr);
+
     struct in_addr in;
     in.s_addr = hostIp;
-    fprintf(stderr, "releaseCpu(%s): not found in assignedCpus list!!\n",
-	    inet_ntoa(in));
+
+
+    try {
+	DmucsHost *host = getHost(in);
+	/* Put this message out on the console, so the administrator can see
+	   when a host is released back to the db. */
+	fprintf(stderr, "Got %s back\n", host->getName().c_str());
+	
+	/* The host may be marked unavailable while one of the cpus
+	   was assigned.  In this case, don't add the cpu back. */
+	if (host->getStateAsInt() == STATUS_AVAILABLE) {
+	    int tier = host->getTier();
+	    addCpusToTier(tier, hostIp, 1);
+	}
+    } catch (DmucsHostNotFound &e) {
+	/* The host may have been removed from the db while a cpu
+	   was assigned.  In this case, just don't add the cpu back
+	   to the availCpus_ db table. */
+    }
+    
 }
 
 
@@ -190,7 +203,8 @@ DmucsDb::serialize()
 	 itr != allHosts_.end(); ++itr) {
 	struct in_addr in;
 	in.s_addr = (*itr)->getIpAddrInt();
-	result << "H: " << inet_ntoa(in) << " " << (*itr)->getStateAsInt() << "\n";
+	result << "H: " << inet_ntoa(in) << " " << (*itr)->getStateAsInt()
+	       << "\n";
     }
 
     for (dmucs_avail_cpus_riter_t itr = availCpus_.rbegin();
@@ -450,11 +464,11 @@ DmucsDb::dump()
 	fprintf(stderr, "\n");
     }
     fprintf(stderr, "ASSIGNED CPUS:\n");
-    for (dmucs_cpus_iter_t itr = assignedCpus_.begin();
+    for (dmucs_assigned_cpus_iter_t itr = assignedCpus_.begin();
 	 itr != assignedCpus_.end(); ++itr) {
 	struct in_addr t;
-	t.s_addr = *itr;
-	fprintf(stderr, "%s ", inet_ntoa(t));
+	t.s_addr = itr->second;
+	fprintf(stderr, "%s assigned to 0x%x", inet_ntoa(t), itr->first);
     }
     fprintf(stderr, "\n");
 

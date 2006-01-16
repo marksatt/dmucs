@@ -37,27 +37,36 @@
 #include <string>
 #include <errno.h>
 #include <time.h>
+#include <sys/time.h>
 #include "COSMIC/HDR/sockets.h"
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+
+#ifndef FD_COPY
+#define FD_COPY(src, dest) memcpy(dest, src, sizeof(fd_set))
 #endif
 
+static void getHostForClient(Socket *sock);
+static void spawn_stats_thread();
+static void spawn_silent_thread();
+static void *doSilentSearch(void *bogus);
+static void *updateStats(void *bogus);
+static void usage(const char *prog);
+static void handleReq(Socket *server, DmucsDb *db);
+static char* peer2buf(const Socket *server, char *buf);
+static void addFd(Socket *sock);
+static void removeFd(Socket *sock);
 
-void *getHostForClient(void *data);
-void spawn_stats_thread();
-void spawn_silent_thread();
-void *doSilentSearch(void *bogus);
-void *updateStats(void *bogus);
-void usage(const char *prog);
+bool debugMode = false;
+static std::string hostsInfoFile = HOSTS_INFO_FILE;
 
 #ifndef HAVE_GETHOSTBYADDR_R
 #ifdef HAVE_GETHOSTBYADDR
-pthread_mutex_t gethost_mutex; 
+static pthread_mutex_t gethost_mutex;  
 #endif /* HAVE_GETHOSTBYADDR */
 #endif /* !HAVE_GETHOSTBYADDR_R */
 
-bool debugMode = false;
+static std::list<Socket *> fdList;
+static fd_set fdMask;
 
 int
 main(int argc, char *argv[])
@@ -98,11 +107,12 @@ main(int argc, char *argv[])
      */
 
     int serverPortNum = SERVER_PORT_NUM;
-    bool daemonMode = true;
+    fd_set rmask;	// read mask
+    fd_set emask;	// exception mask
 
 #ifndef HAVE_GETHOSTBYADDR_R
 #ifdef HAVE_GETHOSTBYADDR
-       pthread_mutex_init(&gethost_mutex,NULL);
+       pthread_mutex_init(&gethost_mutex, NULL);
 #endif /* HAVE_GETHOSTBYADDR */
 #endif /* !HAVE_GETHOSTBYADDR_R */
 
@@ -116,6 +126,13 @@ main(int argc, char *argv[])
 	    serverPortNum = atoi(argv[i]);
 	} else if (strequ("-D", argv[i]) || strequ("--debug", argv[i])) {
 	    debugMode = true;
+	} else if (strequ("-H", argv[i]) ||
+		   strequ("--hosts-info-file", argv[i])) {
+	    if (++i >= argc) {
+		usage(argv[0]);
+		return -1;
+	    }
+	    hostsInfoFile = argv[i];
 	} else {
 	    usage(argv[0]);
 	    return -1;
@@ -151,99 +168,37 @@ main(int argc, char *argv[])
      */
     spawn_stats_thread();
 
+    FD_ZERO(&fdMask);
 
     /* Process requests, forever!!!  Bwa, ha, ha! */
     while (1) {
+	FD_COPY(&fdMask, &rmask);
+	FD_COPY(&fdMask, &emask);
+	FD_SET(server->skt, &rmask);
+	DMUCS_DEBUG((stderr, "\n------- Server: calling select ---------\n"));
+               
+	int result = select(FD_SETSIZE, &rmask, NULL, &emask, NULL);
+	DMUCS_DEBUG((stderr, "select returned %d\n", result));
 
-	char buf[BUFSIZE];
-
-	DMUCS_DEBUG((stderr, "\n------- Server: calling Saccept ---------\n"));
-
-	Socket *sock_req = Saccept(server);
-
-	Sgets(buf, BUFSIZE, sock_req);
-	DmucsReq *req = DmucsReq::parseReq(sock_req, buf);
-	if (req == NULL) {
-	    fprintf(stderr, "Got bad request on socket.  Continuing.\n");
-	    Sclose(sock_req);
-	    continue;
-	}
-
-	switch (req->reqType) {
-	case HOST_REQ: {
-	    DMUCS_DEBUG((stderr, "Got host request from %s: forking\n",
-			 inet_ntoa(req->clientIp)));
-	    dmucs_pthread_info_t *info =
-		new dmucs_pthread_info_t(req->clientIp.s_addr, sock_req);
-	    pthread_attr_t tattr;
-	    pthread_attr_init(&tattr);
-	    pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-	    pthread_t thread_id;
-	    int ret;
-	    DMUCS_DEBUG((stderr, "calling pthread_create\n",
-			 inet_ntoa(req->clientIp)));
-	    if ((ret = pthread_create(&thread_id, &tattr, getHostForClient,
-				      (void *) info)) != 0) {
-		perror("pthread_create");
-		Sclose(sock_req);
-		delete info;
-		continue;
+	std::list<Socket*>::const_iterator it;
+	for (it = fdList.begin(); it != fdList.end(); ++it) {
+	    if (FD_ISSET(((Socket*)*it)->skt, &rmask)) {
+		DMUCS_DEBUG((stderr,
+			     "\n----- Server: Handle client request -----\n"));
+		handleReq(*it, db);
+		/* handleReq could change the list so we have to jump out
+		   here. */
+		break;
 	    }
-	    /* The child will close the sock_req and free info. */
-	    break;
 	}
-	case LOAD_AVERAGE_INFORM: {
-	    DMUCS_DEBUG((stderr, "Got load average mesg\n"));
-	    try {
-		DmucsHost *host = db->getHost(req->u.ldAvgData.host);
-		/* If the host hasn't been explicitly made unavailable,
-		   then make it available. */
-		if (! host->isUnavailable()) {
-		    host->avail();	// make sure the host is available
-		}
-		host->updateTier(req->u.ldAvgData.ldAvg1,
-				 req->u.ldAvgData.ldAvg5,
-				 req->u.ldAvgData.ldAvg10);
-	    } catch (DmucsHostNotFound &e) {
-		DmucsHost *h = DmucsHost::createHost(req->u.ldAvgData.host);
-		h->updateTier(req->u.ldAvgData.ldAvg1, req->u.ldAvgData.ldAvg5,
-			      req->u.ldAvgData.ldAvg10);
-	    } catch (...) {
-	    }
-	    Sclose(sock_req);
-	    break;
-	}
-	case STATUS_INFORM: {
-	    if (req->u.statusData.status == STATUS_AVAILABLE) {
-		if (db->haveHost(req->u.statusData.host)) {
-		    /* Make it available (if it wasn't). */
-		    db->getHost(req->u.statusData.host)->avail();
-		} else {
-		    /* A new host is available! */
-		    DMUCS_DEBUG((stderr, "Creating new host %s\n",
-				 inet_ntoa(req->u.statusData.host)));
-		    DmucsHost::createHost(req->u.statusData.host);
-		}
-	    } else {	// status is unavailable.
-		db->getHost(req->u.statusData.host)->unavail();
-	    }
-	    Sclose(sock_req);
-	    break;
-	}
-	case MONITOR_REQ: {
-	    std::string str = db->serialize();
-	    Sputs((char *) str.c_str(), sock_req);
-	    Sclose(sock_req);
-	    break;
-	}
-	default: {
-	    fprintf(stderr, "Bad request: %s\n", buf);
-	    Sclose(sock_req);
-	}
-	} // switch
 
-	delete req;
-
+	if (FD_ISSET(server->skt, &rmask)) {
+	    DMUCS_DEBUG((stderr, "\n------- Server: Calling Saccept -----\n"));
+       
+	    Socket *sock_req = Saccept(server);
+	    addFd(sock_req);
+	    handleReq(sock_req, db);
+	}
     }
 
 #ifndef HAVE_GETHOSTBYADDR_R
@@ -251,51 +206,20 @@ main(int argc, char *argv[])
     pthread_mutex_destroy(&gethost_mutex);
 #endif /* HAVE_GETHOSTBYADDR */
 #endif /* !HAVE_GETHOSTBYADDR_R */
-
 }
 
 
-void *
-getHostForClient(void *data)
+static void
+getHostForClient(Socket *sock)
 {
-    dmucs_pthread_info_t *info = (dmucs_pthread_info_t *) data;
-
-
     DMUCS_DEBUG((stderr, "thread: top\n"));
     DmucsDb *db = DmucsDb::getInstance();
     DMUCS_DEBUG((stderr, "thread: got instance\n"));
 
-
     try {
 	DMUCS_DEBUG((stderr, "thread: hi\n"));
 	unsigned int cpuIpAddr = db->getBestAvailCpu();
-	struct in_addr c;
-	c.s_addr = cpuIpAddr;
-	struct hostent he, *res = 0;
-	char buffer[128];
-	int myerrno;
-	int res8 = 0;
-
-#if HAVE_GETHOSTBYADDR_R
-#if HAVE_GETHOSTBYADDR_R_7_ARGS
-	res = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
-			      &he, buffer, 128, &myerrno);
-#elif HAVE_GETHOSTBYADDR_R_8_ARGS
-	res8 = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
-			       &he, buffer, 128, &res, &myerrno);
-#else
-#error HELP -- do not know how to compile gethostbyaddr_r
-#endif /* HAVE_GETHOSTBYADDR_R_X_ARGS */
-#elif HAVE_GETHOSTBYADDR
-	pthread_mutex_lock(&gethost_mutex);
-	res = gethostbyaddr((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET);
-	strncpy(buffer,res->h_name, sizeof(buffer));
-	buffer[sizeof(buffer)] = 0;
-	res->h_name = buffer;
-	pthread_mutex_unlock(&gethost_mutex);
-#endif
-	std::string resolved_name =
-	    (res == NULL || res8 != 0) ? inet_ntoa(c) : he.h_name;
+	std::string resolved_name = DmucsHost::resolveIp2Name(cpuIpAddr);
 
 	fprintf(stderr, "Giving out %s\n", resolved_name.c_str());
 
@@ -303,52 +227,26 @@ getHostForClient(void *data)
 	   no more available CPUs.  We send 0.0.0.0 to the client
 	   but we don't record it as an assigned cpu. */
 	if (cpuIpAddr != 0UL) {
-	    db->assignCpuToClient(cpuIpAddr, info->clientIpAddr);
+	    db->assignCpuToClient(cpuIpAddr, (unsigned int) sock);
 	}
-	Sputs(inet_ntoa(c), info->sock);
+	struct in_addr c;
+	c.s_addr = cpuIpAddr;
+	Sputs(inet_ntoa(c), sock);
 
 #if 0
 	fprintf(stderr, "The databases are now:\n");
 	db->dump();
 #endif
 
-	/*
-	 * Sit, waiting for the client to close the socket, which
-	 * indicates that the cpu is done compiling code for the
-	 * client.  Thus, we may put the assigned ppu back into the
-	 * pool of available cpus.
-	 */
-	int ret = Swait(info->sock);
-	fprintf(stderr, "Got %s back\n", resolved_name.c_str());
-	if (ret < 0) {
-	    DMUCS_DEBUG((stderr, "calling releaseCpu\n"));
-	    db->releaseCpu(cpuIpAddr);
-	} else if (ret >= 0) {
-	    /* Got bytes?!!!  Error. Should not happen. */
-	}
     } catch (DmucsNoMoreHosts &e) {
 	fprintf(stderr, "!!!!!      Out of hosts    !!!!!\n");
     } catch (...) {
 	fprintf(stderr, "!!!!!  Some other error  !!!!!\n");
     }
-
-    struct sockaddr sck;
-    socklen_t s = sizeof(sck);
-    getsockname(info->sock->skt, &sck, &s);
-    struct sockaddr_in *sin = (struct sockaddr_in *) &sck;
-    DMUCS_DEBUG((stderr, "getHost: closing %d\n", sin->sin_port));
-    Sclose(info->sock);
-
-#if 0
-    fprintf(stderr, "End of getHostForClient: The databases are now:\n");
-    db->dump();
-#endif
-
-    delete info;
 }
 
 
-void
+static void
 spawn_silent_thread()
 {
     pthread_attr_t tattr;
@@ -365,7 +263,7 @@ spawn_silent_thread()
     }
 }
 
-void
+static void
 spawn_stats_thread()
 {
     pthread_attr_t tattr;
@@ -381,7 +279,7 @@ spawn_stats_thread()
     }
 }
 
-void *
+static void *
 doSilentSearch(void *bogus /* not used */)
 {
     while (1) {
@@ -393,7 +291,7 @@ doSilentSearch(void *bogus /* not used */)
 
 
 
-void *
+static void *
 updateStats(void *bogus /* not used */)
 {
     while (1) {
@@ -413,9 +311,121 @@ updateStats(void *bogus /* not used */)
 }
 
 
-void
+static void
 usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [-p|--port <port>] [-D|--debug] "
-	    "[-nd|--no-daemon]]\n\n", prog);
+	    "[-H|--hosts-info-file <file>]\n\n", prog);
+}
+
+
+static void
+handleReq(Socket *sock_req, DmucsDb *db)
+{
+    char buf[BUFSIZE];
+
+    DMUCS_DEBUG((stderr, "New request from %s\n", peer2buf(sock_req, buf)));
+
+    if (Sgets(buf, BUFSIZE, sock_req) == NULL) {
+	DMUCS_DEBUG((stderr, "Socket closed\n"));
+	db->releaseCpu((unsigned int)sock_req);
+	removeFd(sock_req);
+	return;
+    }
+
+    DmucsReq *req = DmucsReq::parseReq(sock_req, buf);
+    if (req == NULL) {
+	fprintf(stderr, "Got bad request on socket.  Continuing.\n");
+	removeFd(sock_req);
+	return;
+    }
+
+    switch (req->reqType) {
+    case HOST_REQ: {
+	DMUCS_DEBUG((stderr, "Got host request from %s\n",
+		     inet_ntoa(req->clientIp)));
+	getHostForClient(sock_req);
+	break;
+    }
+    case LOAD_AVERAGE_INFORM: {
+	DMUCS_DEBUG((stderr, "Got load average mesg\n"));
+	try {
+	    DmucsHost *host = db->getHost(req->u.ldAvgData.host);
+	    /* If the host hasn't been explicitly made unavailable,
+	       then make it available. */
+	    if (! host->isUnavailable()) {
+		host->avail();      // make sure the host is available
+	    }
+	    host->updateTier(req->u.ldAvgData.ldAvg1,
+			     req->u.ldAvgData.ldAvg5,
+			     req->u.ldAvgData.ldAvg10);
+	} catch (DmucsHostNotFound &e) {
+	    DmucsHost *h = DmucsHost::createHost(req->u.ldAvgData.host,
+						 hostsInfoFile);
+	    h->updateTier(req->u.ldAvgData.ldAvg1, req->u.ldAvgData.ldAvg5,
+			  req->u.ldAvgData.ldAvg10);
+	} catch (...) {
+	}
+	removeFd(sock_req);
+	break;
+    }
+    case STATUS_INFORM: {
+	if (req->u.statusData.status == STATUS_AVAILABLE) {
+	    if (db->haveHost(req->u.statusData.host)) {
+		/* Make it available (if it wasn't). */
+		db->getHost(req->u.statusData.host)->avail();
+	    } else {
+		/* A new host is available! */
+		DMUCS_DEBUG((stderr, "Creating new host %s\n",
+			     inet_ntoa(req->u.statusData.host)));
+		DmucsHost::createHost(req->u.statusData.host, hostsInfoFile);
+	    }
+	} else {    // status is unavailable.
+	    db->getHost(req->u.statusData.host)->unavail();
+	}
+	removeFd(sock_req);
+	break;
+    }
+    case MONITOR_REQ: {
+	std::string str = db->serialize();
+	Sputs((char *) str.c_str(), sock_req);
+	removeFd(sock_req);
+	break;
+    }
+    default: {
+	fprintf(stderr, "Bad request: %s\n", buf);
+	removeFd(sock_req);
+    }
+    } // switch
+
+    delete req;
+}
+
+
+static char *
+peer2buf(const Socket *sock, char *buf)
+{
+    struct sockaddr sck;
+    socklen_t s = sizeof(sck);
+    getpeername(sock->skt, &sck, &s);
+    struct sockaddr_in *sin = (struct sockaddr_in *) &sck;
+       
+    sprintf(buf, "%s:%d", inet_ntoa(sin->sin_addr), sin->sin_port);
+    return buf;     
+}
+
+
+static void
+addFd(Socket *sock)
+{
+    fdList.push_back(sock);
+    FD_SET(sock->skt, &fdMask);
+}
+
+static void
+removeFd(Socket *sock)
+{
+    FD_CLR(sock->skt, &fdMask);
+    fdList.remove(sock);
+    Sclose(sock);
 }

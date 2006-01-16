@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 
+
 #define HOSTS_INFO_FILE "hosts-info"
 
 
@@ -31,7 +32,7 @@ class DmucsHostsFile
 {
 public:
 
-    static DmucsHostsFile *getInstance();
+    static DmucsHostsFile *getInstance(const std::string &hostsInfoFile);
     void getDataForHost(const struct in_addr &ipAddr, int *numCpus,
 			int *powerIndex) const;
 
@@ -42,7 +43,8 @@ public:
      */
 
 private:
-    DmucsHostsFile();	// private so that it cannot be used.
+    // this is private so that it cannot be used (this is a Singleton).
+    DmucsHostsFile(const std::string &hostsInfoFile);	
     ~DmucsHostsFile();
 
     struct info_t {
@@ -53,6 +55,7 @@ private:
     };
 
     static DmucsHostsFile *instance_;
+    std::string hostsInfoFile_;
 
     /*
      * This maps an IP address (in 32-bit format) to the pair of values:
