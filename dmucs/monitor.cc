@@ -195,22 +195,31 @@ void parseResults(const char *resultStr)
 	    break;
 	}
 	case 'C': {
+
+	    std::string line;
+	    std::getline(instr, line);
+
+	    std::istringstream linestr(line);
+	    
 	    int tierNum;
-	    instr >> tierNum;
-	    instr.ignore(2);		// eat the ': '
+	    linestr >> tierNum;
+	    linestr.ignore(2);		// eat the ': '
 	    std::string ipAddrAndNCpus;
 	    std::cout << "Tier " << tierNum << ": ";
+
+	    // parse one or more "ipaddr/numcpus" fields.
 	    while (1) {
 		char ipName[32];
-		// Read ip address, ending in /.
-		instr.get(ipName, 32, '/');
-		if (! instr.good()) {
+		// Read ip address, ending in '/'
+		linestr.get(ipName, 32, '/');
+		if (! linestr.good()) {
 		    break;
 		}
-		instr.ignore();		// skip the '/'
+		linestr.ignore();		// skip the '/'
 		int numCpus;
-		instr >> numCpus;
-		instr.ignore();		// eat the trailing ' '.
+		linestr >> numCpus;
+		linestr.ignore();		// eat ' '
+
 		unsigned int addr = inet_addr(ipName);
 		struct hostent *he = gethostbyaddr((char *)&addr, sizeof(addr),
 						   AF_INET);
