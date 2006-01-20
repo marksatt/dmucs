@@ -1,43 +1,36 @@
-#!/usr/bin/env python
+#!/usr/bin/env sh
 
-import socket, sys, getopt, os
-
-
-#
-# Options:
-#          -h <hostname to add>
-# All are optional.  If -h is not given, then the hostname of the host
-# that this script is executed on is used.
-#
-
-opts, args_proper = getopt.getopt(sys.argv[1:], "h:")
-
-# Default values.
-host = ""
+DMUCS_DIR=/us/bfsbld/Compilers/distcc
 
 #
-# opts is a list of pairs: (option, parameter)
+# This script undoes what the enable-host script does.  Specifically, it
+# kills the dmucs loadavg daemon, and, then sends a "remove host" message
+# to the dmucs server (note that a loadavg message from a machine adds
+# the host to the dmucs database if it is not already there, but lack of
+# periodic load average messages from a host does NOT remove the host from
+# the database -- that's why we have to send a "remove host" message.
 #
-for option, param in opts:
-    if option == "-h":
-        host = param
-
+# Then, this script kills the distccd daemons.
 #
-# Note: we always send the IP address of the host to the host-server.
+# Arguments: 1: the name of the machine on which the dmucs server is running.
 #
-if host == "":
-    # The user typed enable-host <hostname>: we'll accept it.
-    if len(args_proper) != 0:
-        host = socket.gethostbyname(args_proper[0])
-    else:
-        host = socket.gethostbyname(socket.getfqdn(socket.gethostname()))
-else:
-    host = socket.gethostbyname(host)
 
+if [ $# -eq 0 ] ; then
+    echo "Usage: $0 <server-machine>"
+    exit 
+fi
 
-print "disabling host " + host
+server=$1
 
+echo "Stopping the loadavg daemon"
+/bin/ps -ef | /bin/grep 'loadavg' | /bin/grep -v grep | /usr/bin/awk '{print $2}' | /usr/bin/xargs /bin/kill
+echo "done"
 
-cmd = "/bin/ps -ef | /bin/grep 'loadavg' | /usr/bin/awk '{print $2}' | /usr/bin/xargs /bin/kill"
-os.system(cmd)
-os.system("/bin/kill -TERM `cat /us/bfsbld/Compilers/distcc/pids/" + host + ".pid`")
+echo "Removing this host from the dmucs server"
+$DMUCS_DIR/bin/removehost -s $server
+echo "done"
+
+echo "Stopping the distccd daemons"
+pidfile=$DMUCS_DIR/pids/`hostname`.pid
+/bin/kill -HUP `cat $pidfile`
+echo "done"

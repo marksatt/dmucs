@@ -1,46 +1,39 @@
-#!/usr/bin/env python
+#!/usr/bin/env sh
 
-import socket, sys, getopt, os
+
+DMUCS_DIR=/us/bfsbld/Compilers/distcc
+
+
+#
+# This shell script simply starts up the distccd daemons and the
+# loadavg daemon on this host.  The only argument to it is the location of
+# the dmucs server ('dmucs').
+#
+
+
+if [ $# -eq 0 ] ; then
+    echo "Usage: $0 <server-machine>"
+    exit 
+fi
+
+server=$1
+
+echo "Starting distcc daemons"
+logfile=$DMUCS_DIR/log/`hostname`.log
+pidfile=$DMUCS_DIR/pids/`hostname`.pid
 
 
 #
-# Options:
-#          -h <hostname to add>
-# All are optional.  If -h is not given, then the hostname of the host
-# that this script is executed on is used.
+# NOTE NOTE NOTE: you probably want to change the value of the "--allow"
+# argument to something more restrictive.  See the distcc documentation for
+# more information.
 #
+$DMUCS_DIR/bin/distccd --daemon --log-file=$logfile --pid-file $DMUCS_DIR/pids/`hostname`.pid --allow 0.0.0.0/0
 
-opts, args_proper = getopt.getopt(sys.argv[1:], "h:")
+echo "done: daemons writing to log file" $logfile
+echo "      master daemon pid" `cat $pidfile`
 
-# Default values.
-host = ""
-
-#
-# opts is a list of pairs: (option, parameter)
-#
-for option, param in opts:
-    if option == "-h":
-        host = param
-
-#
-# Note: we always send the IP address of the host to the host-server.
-#
-if host == "":
-    # The user typed enable-host <hostname>: we'll accept it.
-    if len(args_proper) != 0:
-        host = socket.gethostbyname(args_proper[0])
-    else:
-        host = socket.gethostbyname(socket.getfqdn(socket.gethostname()))
-else:
-    host = socket.gethostbyname(host)
-
-hostname = socket.gethostbyaddr(host)[0]
-
-print "enabling host", hostname
-
-cmd = "/us/bfsbld/Compilers/distcc/bin/distccd --daemon --log-file=/us/bfsbld/Compilers/distcc/log/" + \
-      hostname + ".log --pid-file /us/bfsbld/Compilers/distcc/pids/" + host + \
-      ".pid --allow 0.0.0.0/0"
-os.system(cmd)
-os.system("/us/norman/dmucs/solaris/loadavg " + host + " &")
+echo "Starting loadavg daemon, communicating with $server"
+$DMUCS_DIR/bin/loadavg -s $server &
+echo "done"
 
