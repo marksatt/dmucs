@@ -14,3 +14,9 @@ loadavg_SOURCES = loadavg.cc
 monitor_SOURCES = monitor.cc
 
 remhost_SOURCES = remhost.cc
+
+#
+# Make -DPKGDATADIR=<pkgdatadir> be passed on each compile.
+#
+AM_CPPFLAGS = -DPKGDATADIR=\"${pkgdatadir}\"
+

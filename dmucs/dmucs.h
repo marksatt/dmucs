@@ -29,8 +29,21 @@ extern bool debugMode;
 #define DMUCS_DEBUG(x) if (debugMode) fprintf x
 #define strequ(x, y) (strncmp(x, y, strlen(x)) == 0)
 
-
+/*
+ * Ideally, the administrator should set the name of the machine on which
+ * the host server will run (and the clients (like 'gethost') will contact)
+ * by putting CPPFLAGS=-DSERVER_MACH_NAME=\\\"<hostname>\\\" as an
+ * argument to the 'configure' script.
+ * E.g., ./configure CPPFLAGS=-DSERVER_MACH_NAME=\\\"mulberry\\\"
+ *       if the administrator plans to run the 'dmucs' server on a machine
+ *       named mulberry.
+ */
+#ifndef SERVER_MACH_NAME
 #define SERVER_MACH_NAME	"localhost"
+#endif
+
+#ifndef SERVER_PORT_NUM
 #define SERVER_PORT_NUM 9714
+#endif
 
 #endif

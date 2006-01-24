@@ -126,6 +126,11 @@ loadavg_SOURCES = loadavg.cc
 monitor_SOURCES = monitor.cc
 
 remhost_SOURCES = remhost.cc
+
+#
+# Make -DPKGDATADIR=<pkgdatadir> be passed on each compile.
+#
+AM_CPPFLAGS = -DPKGDATADIR=\"${pkgdatadir}\"
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs

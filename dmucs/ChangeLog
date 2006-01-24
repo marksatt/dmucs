@@ -4,3 +4,13 @@
 0.2 -- Thanks to Patrik Olesen for code to eliminate most pthread forks,
        and for the -H option to the server to point to the hosts-info file.
     -- made a few changes to store resolve IP names in the DmucsHost object.
+
+0.3 -- Look for hosts-info in the $pkgdatadir now -- usually
+       /usr/local/share/dmucs/hosts-info.
+    -- Expect the administrator to specify
+	CPPFLAGS=-DSERVER_MACH_NAME=\\\"<machname>\\\" when running
+       'configure'.  This specifies where the dmucs host-server will be run.
+       With this change, you don't have to specify -s to all the executables
+       (loadavg, gethost, monitor, etc.)
+
+ 

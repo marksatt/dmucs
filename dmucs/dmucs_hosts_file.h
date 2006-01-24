@@ -24,8 +24,11 @@
 #include <map>
 #include <string>
 
-
-#define HOSTS_INFO_FILE "hosts-info"
+#ifdef PKTDATADIR
+const std::string HOSTS_INFO_FILE = PKGDATADIR + "/" + "hosts-info";
+#else
+const std::string HOSTS_INFO_FILE = "hosts-info";
+#endif
 
 
 class DmucsHostsFile
