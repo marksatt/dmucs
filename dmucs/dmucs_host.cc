@@ -34,6 +34,13 @@
 #include <config.h>
 #endif
 
+/* For cygwin compilation */
+#ifndef HAVE_GETHOSTBYADDR_R
+#ifdef HAVE_GETHOSTBYADDR
+static pthread_mutex_t gethost_mutex;
+#endif /* HAVE_GETHOSTBYADDR */
+#endif /* !HAVE_GETHOSTBYADDR_R */
+
 
 DmucsHost::DmucsHost(const struct in_addr &ipAddr,
 		     const int numCpus, const int powerIndex) :
