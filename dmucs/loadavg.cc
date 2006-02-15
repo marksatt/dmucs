@@ -134,9 +134,6 @@ main(int argc, char *argv[])
 	    char junk1[8];
 	    float ldAvg1 = 0.0, ldAvg5 = 0.0, ldAvg10 = 0.0;
 
-	    // TODO: use >> operators and look for the word "average:"  then
-	    // take the next 3 words as floats.
-
 	    std::istringstream ist(buf);
 
 	    std::string word;

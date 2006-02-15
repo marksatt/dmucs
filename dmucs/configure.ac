@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT(dmucs, 0.1, vic.norman@gmail.com)
+AC_INIT(dmucs, 0.4, vic.norman@gmail.com)
 AC_CONFIG_SRCDIR([dmucs_pkt.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -28,7 +28,7 @@ AC_C_INLINE
 # Checks for library functions.
 AC_FUNC_FORK
 AC_HEADER_STDC
-AC_CHECK_FUNCS([gethostbyaddr gethostbyaddr_r gethostbyname gethostname inet_ntoa putenv strerror])
+AC_CHECK_FUNCS([gethostbyaddr gethostbyaddr_r gethostname inet_ntoa putenv strerror])
 
 dnl =================================================================
 dnl Support for thread-safe versions of gethostbyaddr, gethostbyname,
@@ -84,6 +84,7 @@ AC_CHECK_FUNC(gethostbyaddr_r, [
 ], [
   AC_MSG_RESULT(no)
 ])
+
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

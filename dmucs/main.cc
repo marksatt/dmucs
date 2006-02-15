@@ -101,9 +101,9 @@ main(int argc, char *argv[])
     /*
      * Process command-line arguments:
      *
-     * -p <port>, --port <port>: the port number to listen on (default: 6714).
+     * -p <port>, --port <port>: the port number to listen on (default: 9714).
      * -D, --debug: debug mode (default: off)
-     * -nd, --no-daemon: do not spawn the server as a daemon.
+     * -H, --hosts-info-file <filename>: specify the hosts info file location.
      */
 
     int serverPortNum = SERVER_PORT_NUM;

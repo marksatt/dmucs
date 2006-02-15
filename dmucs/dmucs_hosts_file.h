@@ -24,8 +24,9 @@
 #include <map>
 #include <string>
 
-#ifdef PKTDATADIR
-const std::string HOSTS_INFO_FILE = PKGDATADIR + "/" + "hosts-info";
+#ifdef PKGDATADIR
+const std::string HOSTS_INFO_FILE = std::string(PKGDATADIR) + \
+	std::string("/") + std::string("hosts-info");
 #else
 const std::string HOSTS_INFO_FILE = "hosts-info";
 #endif
