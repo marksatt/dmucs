@@ -20,6 +20,7 @@
  */
 
 #include "dmucs.h"
+#include "dmucs_resolve.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -82,6 +83,7 @@ main(int argc, char *argv[])
     std::ostringstream serverName;
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
+    struct hostent *he;
 
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
@@ -112,55 +114,59 @@ main(int argc, char *argv[])
 		 serverName.str().c_str(), clientPortStr.str().c_str()));
     Socket *client_sock = Sopen((char *) serverName.str().c_str(),
 				(char *) clientPortStr.str().c_str());
-    if (!client_sock) {
-	fprintf(stderr, "Could not open client: %s\n", strerror(errno));
-	return -1;
-    }
-
-    char hostname[256];
-    if (gethostname(hostname, 256) < 0) {
-	fprintf(stderr, "Could not get my hostname\n");
-	Sclose(client_sock);
-	return -1;
-    }
-    struct hostent *he = gethostbyname(hostname);
-    if (he == NULL) {
-	fprintf(stderr, "Could not get my hostname\n");
-	Sclose(client_sock);
-	return -1;
-    }
-
-    struct in_addr in;
-    memcpy(&in.s_addr, he->h_addr_list[0], sizeof(in.s_addr));
-
-    struct sockaddr sck;
-    socklen_t s = sizeof(sck);
-    getsockname(client_sock->skt, &sck, &s);
-    struct sockaddr_in *sin = (struct sockaddr_in *) &sck;
-
-    std::ostringstream clientReqStr;
-    clientReqStr << "host " << inet_ntoa(in) << " " << sin->sin_port;
-    DMUCS_DEBUG((stderr, "Writing -->%s<-- to the server\n",
-		 clientReqStr.str().c_str()));
-
-    Sputs((char *) clientReqStr.str().c_str(), client_sock);
 
     char remCompHostName[256];
-    DMUCS_DEBUG((stderr, "Calling Sgets\n"));
-    if (Sgets(remCompHostName, 256, client_sock) == NULL) {
-	fprintf(stderr, "Got error from reading socket.\n");
-	Sclose(client_sock);
-	return -1;
+    if (!client_sock) {
+	fprintf(stderr, "WARNING: Could not connect to %s: %s\n",
+		serverName.str().c_str(), strerror(errno));
+   	sprintf(remCompHostName,"0.0.0.0");
+    } else {
+
+	char hostname[256];
+	if (gethostname(hostname, 256) < 0) {
+	    fprintf(stderr, "Could not get my hostname\n");
+	    Sclose(client_sock);
+	    return -1;
+	}
+	struct hostent *he = gethostbyname(hostname);
+	if (he == NULL) {
+	    fprintf(stderr, "Could not get my hostname\n");
+	    Sclose(client_sock);
+	    return -1;
+	}
+
+	struct in_addr in;
+	memcpy(&in.s_addr, he->h_addr_list[0], sizeof(in.s_addr));
+
+	struct sockaddr sck;
+	socklen_t s = sizeof(sck);
+	getsockname(client_sock->skt, &sck, &s);
+	struct sockaddr_in *sin = (struct sockaddr_in *) &sck;
+
+	std::ostringstream clientReqStr;
+	clientReqStr << "host " << inet_ntoa(in) << " " << sin->sin_port;
+	DMUCS_DEBUG((stderr, "Writing -->%s<-- to the server\n",
+		     clientReqStr.str().c_str()));
+
+	Sputs((char *) clientReqStr.str().c_str(), client_sock);
+
+	char remCompHostName[256];
+	DMUCS_DEBUG((stderr, "Calling Sgets\n"));
+	if (Sgets(remCompHostName, 256, client_sock) == NULL) {
+	    fprintf(stderr, "Got error from reading socket.\n");
+	    Sclose(client_sock);
+	    return -1;
+	}
+	DMUCS_DEBUG((stderr, "Got -->%s<-- from the server\n",
+		     remCompHostName));
     }
-    DMUCS_DEBUG((stderr, "Got -->%s<-- from the server\n",
-		 remCompHostName));
 
     /* If we get 0.0.0.0 that means there are no hosts left in the database.
-       We will change that to the null string, and put that in for the
+       We will change that to localhost, and put that in for the
        DISTCC_HOSTS value. */
     std::string resolved_name;
     if (strncmp(remCompHostName, "0.0.0.0", strlen("0.0.0.0")) == 0) {
-	resolved_name = "";
+	resolved_name = "localhost";
     } else {
 
 	/*
@@ -171,25 +177,8 @@ main(int argc, char *argv[])
 	unsigned int cpuIpAddr = inet_addr(remCompHostName);
 	struct in_addr c;
 	c.s_addr = cpuIpAddr;
-	struct hostent he, *res = 0;
-	int myerrno;
-	char buffer[128];
-	int res8 = 0;
-#if HAVE_GETHOSTBYADDR_R
-#if HAVE_GETHOSTBYADDR_R_7_ARGS
-	res = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
-			      &he, buffer, 128, &myerrno);
-#elif HAVE_GETHOSTBYADDR_R_8_ARGS
-	res8 = gethostbyaddr_r((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET,
-			       &he, buffer, 128, &res, &myerrno);
-#else
-#error HELP -- do not know how to compile gethostbyaddr_r
-#endif /* HAVE_GETHOSTBYADDR_R_X_ARGS */
-#elif HAVE_GETHOSTBYADDR
-	res = gethostbyaddr((char *)&cpuIpAddr, sizeof(cpuIpAddr), AF_INET);
-#endif
-	resolved_name = (res == NULL || res8 != 0) ?
-	    inet_ntoa(c) : he.h_name;
+
+	getHostName(resolved_name, c);
 
 	/*
 	 * Add /100 to the end of the DISTCC_HOSTS value.  This tells
@@ -212,8 +201,6 @@ main(int argc, char *argv[])
 	 */
 	resolved_name += "/100";
     }
-
-    
 
     std::ostringstream tmp;
     tmp << "DISTCC_HOSTS=" << resolved_name;

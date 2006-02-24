@@ -77,7 +77,7 @@ public:
     const int getStateAsInt() const;
     int getTier() const;
     int calcTier(float ldavg1, float ldavg5, float ldavg10, int pindex) const;
-    std::string getName();
+    const std::string &getName();
 
     unsigned int getIpAddrInt() const { return ipAddr_.s_addr; }
     int getNumCpus() const { return ncpus_; }
@@ -85,7 +85,8 @@ public:
     bool isUnavailable() const;
 
     static std::string resolveIp2Name(unsigned int ipAddr);
-
+    static const std::string &getName(std::string &resolvedName,
+				      const struct in_addr &ipAddr);
 
     void dump();
 };

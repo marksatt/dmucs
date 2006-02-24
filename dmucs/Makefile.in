@@ -113,13 +113,13 @@ SUBDIRS = COSMIC
 
 bin_PROGRAMS = dmucs gethost loadavg monitor remhost
 
-dmucs_SOURCES = dmucs_db.cc dmucs_host.cc dmucs_hosts_file.cc dmucs_pkt.cc \
-	dmucs_host_state.cc main.cc
+dmucs_SOURCES = dmucs_resolve.cc dmucs_db.cc dmucs_host.cc \
+	dmucs_hosts_file.cc dmucs_pkt.cc dmucs_host_state.cc main.cc
 
 
 LDADD = COSMIC/simpleskts.a
 
-gethost_SOURCES = gethost.cc
+gethost_SOURCES = dmucs_resolve.cc gethost.cc
 
 loadavg_SOURCES = loadavg.cc
 
@@ -140,14 +140,14 @@ bin_PROGRAMS = dmucs$(EXEEXT) gethost$(EXEEXT) loadavg$(EXEEXT) \
 	monitor$(EXEEXT) remhost$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_dmucs_OBJECTS = dmucs_db.$(OBJEXT) dmucs_host.$(OBJEXT) \
-	dmucs_hosts_file.$(OBJEXT) dmucs_pkt.$(OBJEXT) \
-	dmucs_host_state.$(OBJEXT) main.$(OBJEXT)
+am_dmucs_OBJECTS = dmucs_resolve.$(OBJEXT) dmucs_db.$(OBJEXT) \
+	dmucs_host.$(OBJEXT) dmucs_hosts_file.$(OBJEXT) \
+	dmucs_pkt.$(OBJEXT) dmucs_host_state.$(OBJEXT) main.$(OBJEXT)
 dmucs_OBJECTS = $(am_dmucs_OBJECTS)
 dmucs_LDADD = $(LDADD)
 dmucs_DEPENDENCIES = COSMIC/simpleskts.a
 dmucs_LDFLAGS =
-am_gethost_OBJECTS = gethost.$(OBJEXT)
+am_gethost_OBJECTS = dmucs_resolve.$(OBJEXT) gethost.$(OBJEXT)
 gethost_OBJECTS = $(am_gethost_OBJECTS)
 gethost_LDADD = $(LDADD)
 gethost_DEPENDENCIES = COSMIC/simpleskts.a
@@ -175,7 +175,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/dmucs_host.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/dmucs_host_state.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/dmucs_hosts_file.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dmucs_pkt.Po ./$(DEPDIR)/gethost.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dmucs_pkt.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dmucs_resolve.Po ./$(DEPDIR)/gethost.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/loadavg.Po ./$(DEPDIR)/main.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/monitor.Po ./$(DEPDIR)/remhost.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -287,6 +288,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmucs_host_state.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmucs_hosts_file.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmucs_pkt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmucs_resolve.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gethost.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/loadavg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@

@@ -28,7 +28,7 @@ AC_C_INLINE
 # Checks for library functions.
 AC_FUNC_FORK
 AC_HEADER_STDC
-AC_CHECK_FUNCS([gethostbyaddr gethostbyaddr_r gethostname inet_ntoa putenv strerror])
+AC_CHECK_FUNCS([gethostbyaddr gethostbyaddr_r gethostbyname gethostname inet_ntoa putenv strerror])
 
 dnl =================================================================
 dnl Support for thread-safe versions of gethostbyaddr, gethostbyname,

@@ -23,7 +23,7 @@
 #include "dmucs_db.h"
 #include "dmucs_hosts_file.h"
 #include "dmucs_host_state.h"
-#include <netinet/in.h>
+#include "dmucs_resolve.h"
 #include <stdio.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -33,13 +33,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-/* For cygwin compilation */
-#ifndef HAVE_GETHOSTBYADDR_R
-#ifdef HAVE_GETHOSTBYADDR
-static pthread_mutex_t gethost_mutex;
-#endif /* HAVE_GETHOSTBYADDR */
-#endif /* !HAVE_GETHOSTBYADDR_R */
 
 
 DmucsHost::DmucsHost(const struct in_addr &ipAddr,
@@ -191,41 +184,14 @@ DmucsHost::dump()
 }
 
 
-std::string
+const std::string &
 DmucsHost::getName()
 {
     if (! resolvedName_.empty()) {
 	return resolvedName_;
     }
-    int myerrno;
-    int res8 = 0;
-    char buffer[128];
-    struct hostent he, *res = 0;
 
-
-#if HAVE_GETHOSTBYADDR_R
-#if HAVE_GETHOSTBYADDR_R_7_ARGS
-    res = gethostbyaddr_r((char *)&(ipAddr_.s_addr), sizeof(ipAddr_.s_addr),
-			  AF_INET, &he, buffer, 128, &myerrno);
-#elif HAVE_GETHOSTBYADDR_R_8_ARGS
-    res8 = gethostbyaddr_r((char *)&(ipAddr_.s_addr), sizeof(ipAddr_.s_addr),
-			   AF_INET, &he, buffer, 128, &res, &myerrno);
-#else
-#error HELP -- do not know how to compile gethostbyaddr_r
-#endif /* HAVE_GETHOSTBYADDR_R_X_ARGS */
-#elif HAVE_GETHOSTBYADDR
-    pthread_mutex_lock(&gethost_mutex);
-    res = gethostbyaddr((char *)&(ipAddr_.s_addr), sizeof(ipAddr_.s_addr),
-			AF_INET);
-    strncpy(buffer, res->h_name, sizeof(buffer));
-    buffer[sizeof(buffer)] = 0;
-    res->h_name = buffer;
-    pthread_mutex_unlock(&gethost_mutex);
-#endif
-
-    resolvedName_ = (res == NULL || res8 != 0) ?
-	inet_ntoa(ipAddr_) : he.h_name;
-    return resolvedName_;
+    return getHostName(resolvedName_, ipAddr_);
 }
 
 

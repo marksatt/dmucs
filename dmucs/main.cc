@@ -59,12 +59,6 @@ static void removeFd(Socket *sock);
 bool debugMode = false;
 static std::string hostsInfoFile = HOSTS_INFO_FILE;
 
-#ifndef HAVE_GETHOSTBYADDR_R
-#ifdef HAVE_GETHOSTBYADDR
-static pthread_mutex_t gethost_mutex;  
-#endif /* HAVE_GETHOSTBYADDR */
-#endif /* !HAVE_GETHOSTBYADDR_R */
-
 static std::list<Socket *> fdList;
 static fd_set fdMask;
 
@@ -364,6 +358,8 @@ handleReq(Socket *sock_req, DmucsDb *db)
 						 hostsInfoFile);
 	    h->updateTier(req->u.ldAvgData.ldAvg1, req->u.ldAvgData.ldAvg5,
 			  req->u.ldAvgData.ldAvg10);
+	    fprintf(stderr, "New host available: %s/%d (tier %d)\n",
+		    h->getName().c_str(), h->getNumCpus(), h->getTier());
 	} catch (...) {
 	}
 	removeFd(sock_req);

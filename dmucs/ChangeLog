@@ -13,4 +13,8 @@
        With this change, you don't have to specify -s to all the executables
        (loadavg, gethost, monitor, etc.)
 
- 
+0.4 -- Better yet: the administrator should add the CPPFLAGS thing above
+       to the gmake command -- this works for me on both solaris and linux.
+       Added a message to be printed out when a new host is added.
+       Cleaned up the host name resolution stuff -- all in one file now.
+       Thanks for Patrik Olesen for his help.

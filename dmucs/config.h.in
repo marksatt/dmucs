@@ -21,6 +21,9 @@
 /* Define if gethostbyaddr_r() exists and takes 8 arguments */
 #undef HAVE_GETHOSTBYADDR_R_8_ARGS
 
+/* Define to 1 if you have the `gethostbyname' function. */
+#undef HAVE_GETHOSTBYNAME
+
 /* Define to 1 if you have the `gethostname' function. */
 #undef HAVE_GETHOSTNAME
 
