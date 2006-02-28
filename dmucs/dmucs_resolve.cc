@@ -58,9 +58,11 @@ getHostName(std::string &resolvedName, const struct in_addr &ipAddr)
     pthread_mutex_lock(&gethost_mutex);
     res = gethostbyaddr((char *)&(ipAddr.s_addr), sizeof(ipAddr.s_addr),
 			AF_INET);
-    strncpy(buffer, res->h_name, sizeof(buffer));
-    buffer[sizeof(buffer)] = 0;
-    he.h_name = buffer;
+    if (res != NULL) {
+	strncpy(buffer, res->h_name, sizeof(buffer) - 1);
+	buffer[sizeof(buffer) - 1] = '\0';
+	he.h_name = buffer;
+    }
     pthread_mutex_unlock(&gethost_mutex);
 #else
 #error HELP -- do not know how to compile gethostbyaddr

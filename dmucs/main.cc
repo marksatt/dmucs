@@ -206,13 +206,11 @@ main(int argc, char *argv[])
 static void
 getHostForClient(Socket *sock)
 {
-    DMUCS_DEBUG((stderr, "thread: top\n"));
     DmucsDb *db = DmucsDb::getInstance();
-    DMUCS_DEBUG((stderr, "thread: got instance\n"));
+    unsigned int cpuIpAddr = 0;
 
     try {
-	DMUCS_DEBUG((stderr, "thread: hi\n"));
-	unsigned int cpuIpAddr = db->getBestAvailCpu();
+	cpuIpAddr = db->getBestAvailCpu();
 	std::string resolved_name = DmucsHost::resolveIp2Name(cpuIpAddr);
 
 	fprintf(stderr, "Giving out %s\n", resolved_name.c_str());
@@ -235,7 +233,8 @@ getHostForClient(Socket *sock)
     } catch (DmucsNoMoreHosts &e) {
 	fprintf(stderr, "!!!!!      Out of hosts    !!!!!\n");
     } catch (...) {
-	fprintf(stderr, "!!!!!  Some other error  !!!!!\n");
+	fprintf(stderr, "!!!!!  Some other error: %s!!!!!\n",
+		strerror(errno));
     }
 }
 

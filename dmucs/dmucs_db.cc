@@ -117,7 +117,7 @@ DmucsDb::getBestAvailCpu()
 	itr->second.erase(itr2);
 	return result;
     }
-    return result;		// no more cpus available 
+    throw DmucsNoMoreHosts();
 }
 
 

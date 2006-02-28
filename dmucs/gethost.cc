@@ -150,7 +150,6 @@ main(int argc, char *argv[])
 
 	Sputs((char *) clientReqStr.str().c_str(), client_sock);
 
-	char remCompHostName[256];
 	DMUCS_DEBUG((stderr, "Calling Sgets\n"));
 	if (Sgets(remCompHostName, 256, client_sock) == NULL) {
 	    fprintf(stderr, "Got error from reading socket.\n");
@@ -166,7 +165,7 @@ main(int argc, char *argv[])
        DISTCC_HOSTS value. */
     std::string resolved_name;
     if (strncmp(remCompHostName, "0.0.0.0", strlen("0.0.0.0")) == 0) {
-	resolved_name = "localhost";
+	resolved_name = "";
     } else {
 
 	/*
