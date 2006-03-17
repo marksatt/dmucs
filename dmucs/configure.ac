@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.58)
-AC_INIT(dmucs, 0.4.1, vic.norman@gmail.com)
+AC_INIT(dmucs, 0.5, vic.norman@gmail.com)
 AC_CONFIG_SRCDIR([dmucs_pkt.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE

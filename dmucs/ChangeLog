@@ -23,3 +23,4 @@
     -- Fix some problems with 0.4: problem when running out of hosts, 
        problem with compilation, etc.
  
+0.5 -- Fix compilation problems with running out of hosts.

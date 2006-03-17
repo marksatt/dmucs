@@ -26,37 +26,36 @@
  */
 #ifdef __PROTOTYPE__
 int Swrite(
-  Socket *skt,		/* socket handle			*/
-  void   *buf,		/* socket character buffer	*/
-  int     buflen)	/* length of buffer			*/
+	   Socket *skt,		/* socket handle			*/
+	   void   *buf,		/* socket character buffer	*/
+	   int     buflen)	/* length of buffer			*/
 #else
 int Swrite(
-  skt,				/* socket handle			*/
-  buf,				/* socket character buffer	*/
-  buflen)			/* length of buffer			*/
+	       skt,				/* socket handle		*/
+	       buf,				/* socket character buffer	*/
+	       buflen)			/* length of buffer			*/
 Socket *skt;
 void   *buf;
 int     buflen;
 #endif
 {
-int cnt;
-int wcnt;
+    int cnt;
+    int wcnt;
 
-
-/* sanity check */
-if(!skt) {
+    /* sanity check */
+    if (!skt) {
 	return -1;
-	}
+    }
 
-/* write buflen bytes, no matter the wait */
-for(cnt= 0; cnt < buflen; cnt+= wcnt) {
-	wcnt= send(skt->skt,(void *) (((char *) buf)+cnt),(unsigned) (buflen-cnt),0);
-	if(wcnt < 0) {
-		return cnt;
-		}
+    /* write buflen bytes, no matter the wait */
+    for (cnt = 0; cnt < buflen; cnt += wcnt) {
+	wcnt = send(skt->skt, (void *) (((char *) buf) + cnt),
+		    (unsigned) (buflen - cnt), 0);
+	if (wcnt < 0) {
+	    return cnt;
 	}
-
-return cnt;
+    }
+    return cnt;
 }
 
 /* ---------------------------------------------------------------------

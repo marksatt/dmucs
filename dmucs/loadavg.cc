@@ -119,6 +119,8 @@ main(int argc, char *argv[])
 	    continue;
 	}
 
+	DMUCS_DEBUG((stderr, "got socket: %s\n", Sprtskt(client_sock)));
+
 	FILE *output = popen("uptime", "r");
 	if (output == NULL) {
 	    fprintf(stderr, "Failed to get load avg\n");
@@ -164,9 +166,9 @@ main(int argc, char *argv[])
 		     clientReqStr.c_str()));
 
 	Sputs((char *) clientReqStr.c_str(), client_sock);
+	Sclose(client_sock);
 
 	sleep();
-	Sclose(client_sock);
     }
 }
 

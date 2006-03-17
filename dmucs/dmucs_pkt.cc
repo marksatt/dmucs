@@ -34,8 +34,6 @@ DmucsReq::parseReq(Socket *sock, const char *buffer)
 {
     DmucsReq *req = new DmucsReq();
 
-    DMUCS_DEBUG((stderr, "req is %p\n", req));
-
     /*
      * The first word in the buffer must be one of: "host", "load",
      * "status", or "monitor".

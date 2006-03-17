@@ -94,13 +94,15 @@ main(int argc, char *argv[])
 	    }
 	    serverName.seekp(1);     // remove everything after the first "@".
 	    serverName << argv[nextarg] << '\0';
-	} else if (strequ("-p", argv[nextarg]) || strequ("--port", argv[nextarg])) {
+	} else if (strequ("-p", argv[nextarg]) ||
+		   strequ("--port", argv[nextarg])) {
 	    if (++nextarg >= argc) {
 		usage(argv[0]);
 		return -1;
 	    }
 	    serverPortNum = atoi(argv[nextarg]);
-	} else if (strequ("-D", argv[nextarg]) || strequ("--debug", argv[nextarg])) {
+	} else if (strequ("-D", argv[nextarg]) ||
+		   strequ("--debug", argv[nextarg])) {
 	    debugMode = true;
 	} else {
 	    /* We are looking at the command to run, supposedly. */
@@ -108,12 +110,14 @@ main(int argc, char *argv[])
 	}
     }
 
+
     std::ostringstream clientPortStr;
     clientPortStr << "c" << serverPortNum;
     DMUCS_DEBUG((stderr, "doing Sopen with %s, %s\n",
 		 serverName.str().c_str(), clientPortStr.str().c_str()));
     Socket *client_sock = Sopen((char *) serverName.str().c_str(),
 				(char *) clientPortStr.str().c_str());
+
 
     char remCompHostName[256];
     if (!client_sock) {

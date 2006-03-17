@@ -59,7 +59,7 @@ getHostName(std::string &resolvedName, const struct in_addr &ipAddr)
     res = gethostbyaddr((char *)&(ipAddr.s_addr), sizeof(ipAddr.s_addr),
 			AF_INET);
     if (res != NULL) {
-	strncpy(buffer, res->h_name, sizeof(buffer) - 1);
+	strncpy(buffer, res->h_name, sizeof(buffer));
 	buffer[sizeof(buffer) - 1] = '\0';
 	he.h_name = buffer;
     }

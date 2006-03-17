@@ -26,55 +26,52 @@
 #ifdef __PROTOTYPE__
 Socket *Saccept(Socket *skt)
 #else
-Socket *Saccept(skt)
-Socket *skt;
+    Socket *Saccept(skt)
+    Socket *skt;
 #endif
 {
 #if defined(_AIX)
-size_t          addrlen;
+    size_t          addrlen;
 #elif defined(__gnu_linux__)
-socklen_t       addrlen;
+    socklen_t       addrlen;
 #else
-int             addrlen;
+    int             addrlen;
 #endif
 #ifndef SSLNOSETSOCKOPT
-int             status=1;
+    int             status=1;
 #endif
-struct sockaddr addr;
-Socket         *acceptskt= NULL;
+    struct sockaddr addr;
+    Socket         *acceptskt= NULL;
 
 
-/* sanity check */
-if(!skt) {
+    /* sanity check */
+    if(!skt) {
 	return acceptskt;
-	}
+    }
 
-/* allocate a Socket */
-acceptskt= makeSocket(skt->hostname,skt->sktname,PM_ACCEPT);
-if(!acceptskt) {
+    /* allocate a Socket */
+    acceptskt= makeSocket(skt->hostname,skt->sktname,PM_ACCEPT);
+    if(!acceptskt) {
 	return acceptskt;
-	}
+    }
 
-/* accept a connection */
-addrlen       = sizeof (addr);
-acceptskt->skt= accept(skt->skt, &addr, &addrlen);
-if(acceptskt->skt <= 0) {	/* failure to accept */
-
+    /* accept a connection */
+    addrlen       = sizeof (addr);
+    acceptskt->skt= accept(skt->skt, &addr, &addrlen);
+    if (acceptskt->skt < 0) {	/* failure to accept */
 	freeSocket(acceptskt);
-
-
 	return (Socket *) NULL;
-	}
+    }
 
-/* turn off TCP's buffering algorithm so small packets don't get delayed */
+    /* turn off TCP's buffering algorithm so small packets don't get delayed */
 #ifndef SSLNOSETSOCKOPT
 
 
-if(setsockopt(skt->skt,IPPROTO_TCP,TCP_NODELAY,(char *) &status,sizeof(status)) < 0) {
-	}
+    if(setsockopt(skt->skt,IPPROTO_TCP,TCP_NODELAY,(char *) &status,sizeof(status)) < 0) {
+    }
 #endif	/* #ifndef SSLNOSETSOCKOPT ... */
 
-return acceptskt;
+    return acceptskt;
 }
 
 /* ---------------------------------------------------------------------

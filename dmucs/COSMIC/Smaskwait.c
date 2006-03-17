@@ -48,31 +48,31 @@ static int             first   = 1;
 #ifdef __PROTOTYPE__
 int Smaskwait()
 #else
-int Smaskwait()
+    int Smaskwait()
 #endif
 {
-fd_set wmask;			/* write mask */
-fd_set emask;			/* error mask */
-short  result;
+    fd_set wmask;			/* write mask */
+    fd_set emask;			/* error mask */
+    short  result;
 
 
-FD_ZERO(&wmask);
-FD_ZERO(&emask);
+    FD_ZERO(&wmask);
+    FD_ZERO(&emask);
 
-/* test if something is available for reading on the socket.  This form
- * will block (sleep) until something arrives
- */
-rmask  = mask;
-result = select(waitall, &rmask,&wmask,&emask,timeptr);
+    /* test if something is available for reading on the socket.  This form
+     * will block (sleep) until something arrives
+     */
+    rmask  = mask;
+    result = select(waitall, &rmask,&wmask,&emask,timeptr);
 
-if(result < 0) {	/* error */
+    if(result < 0) {	/* error */
 	return result;
-	}
+    }
 
-/* result >  0: socket has something waiting 
- * result == 0: timeout
- */
-return result;
+    /* result >  0: socket has something waiting 
+     * result == 0: timeout
+     */
+    return result;
 }
 
 /* --------------------------------------------------------------------- */
@@ -83,24 +83,24 @@ return result;
 #ifdef __PROTOTYPE__
 void Smaskset(Socket *skt)
 #else
-void Smaskset(skt)
-Socket *skt;
+    void Smaskset(skt)
+    Socket *skt;
 #endif
 {
 
-if(first) {
+    if(first) {
 	FD_ZERO(&mask);
 	first= 0;
-	}
+    }
 
-if(skt) {
+    if(skt) {
 	FD_SET(skt->skt,&mask);
 	if(skt->skt >= waitall) waitall= skt->skt + 1;
-	}
-else {
+    }
+    else {
 	waitall= 0;
 	FD_ZERO(&mask);
-	}
+    }
 
 }
 
@@ -112,20 +112,20 @@ else {
 #ifdef __PROTOTYPE__
 void Smaskfdset(int fd)
 #else
-void Smaskfdset(fd)
-int fd;
+    void Smaskfdset(fd)
+    int fd;
 #endif
 {
 
-if(first) {
+    if(first) {
 	FD_ZERO(&mask);
 	first= 0;
-	}
+    }
 
-if(0 <= fd && fd < FD_SETSIZE) {	/* fd must be a legal file descriptor */
+    if(0 <= fd && fd < FD_SETSIZE) {	/* fd must be a legal file descriptor */
 	FD_SET(fd,&mask);
 	if(fd >= waitall) waitall= fd + 1;
-	}
+    }
 
 }
 
@@ -138,24 +138,24 @@ if(0 <= fd && fd < FD_SETSIZE) {	/* fd must be a legal file descriptor */
 #ifdef __PROTOTYPE__
 void Smasktime(long seconds,long useconds)
 #else
-void Smasktime(seconds,useconds)
-long seconds;			/* time in seconds			*/
+    void Smasktime(seconds,useconds)
+    long seconds;			/* time in seconds			*/
 long useconds;			/* time in micro-seconds	*/
 #endif
 {
 
-if(seconds < 0 || useconds < 0 || (seconds == 0 && useconds == 0)) {
+    if(seconds < 0 || useconds < 0 || (seconds == 0 && useconds == 0)) {
 	/* no timeout (ie. infinite wait) */
 	timewait.tv_sec = 0L;
 	timewait.tv_usec= 0L;
 	timeptr         = (struct timeval *) NULL;
-	}
+    }
 
-else { /* set up specified timeout */
+    else { /* set up specified timeout */
 	timewait.tv_sec = seconds;
 	timewait.tv_usec= useconds;
 	timeptr         = &timewait;
-	}
+    }
 
 }
 
@@ -169,27 +169,27 @@ else { /* set up specified timeout */
  */
 int Smasktest()
 {
-int ret;
-struct timeval timewait_hold;
-struct timeval *timeptr_hold=NULL;
+    int ret;
+    struct timeval timewait_hold;
+    struct timeval *timeptr_hold=NULL;
 
 
-/* save current time info */
-timewait_hold   = timewait;
-timeptr_hold    = timeptr;
+    /* save current time info */
+    timewait_hold   = timewait;
+    timeptr_hold    = timeptr;
 
-/* set up for new time info */
-timewait.tv_sec = 0L;
-timewait.tv_usec= 0L;
-timeptr         = &timewait;
+    /* set up for new time info */
+    timewait.tv_sec = 0L;
+    timewait.tv_usec= 0L;
+    timeptr         = &timewait;
 
-ret= Smaskwait();
+    ret= Smaskwait();
 
-/* restore time info */
-timewait= timewait_hold;
-timeptr = timeptr_hold;
+    /* restore time info */
+    timewait= timewait_hold;
+    timeptr = timeptr_hold;
 
-return ret;
+    return ret;
 }
 
 /* --------------------------------------------------------------------- */
@@ -200,18 +200,18 @@ return ret;
 #ifdef __PROTOTYPE__
 void Smaskunset(Socket *skt)
 #else
-void Smaskunset(skt)
-Socket *skt;
+    void Smaskunset(skt)
+    Socket *skt;
 #endif
 {
 
-if(skt) {
+    if(skt) {
 	FD_CLR(skt->skt,&mask);
-	}
-else {
+    }
+    else {
 	waitall= 0;
 	FD_ZERO(&mask);
-	}
+    }
 
 }
 
@@ -223,16 +223,16 @@ else {
 #ifdef __PROTOTYPE__
 void Smaskunfdset(int fd)
 #else
-void Smaskunfdset(fd)
-int fd;
+    void Smaskunfdset(fd)
+    int fd;
 #endif
 {
 
-if(fd) FD_CLR(fd,&mask);
-else {
+    if(fd) FD_CLR(fd,&mask);
+    else {
 	waitall= 0;
 	FD_ZERO(&mask);
-	}
+    }
 
 }
 
@@ -242,16 +242,15 @@ else {
 #ifdef __PROTOTYPE__
 Smask Smaskget()
 #else
-Smask Smaskget()
+    Smask Smaskget()
 #endif
 {
-Smask smask;
+    Smask smask;
 
+    smask.mask   = mask;
+    smask.waitall= waitall;
 
-smask.mask   = mask;
-smask.waitall= waitall;
-
-return smask;
+    return smask;
 }
 
 /* --------------------------------------------------------------------- */
@@ -260,13 +259,13 @@ return smask;
 #ifdef __PROTOTYPE__
 void Smaskuse(Smask usermask)
 #else
-void Smaskuse(usermask)
-Smask usermask;
+    void Smaskuse(usermask)
+    Smask usermask;
 #endif
 {
 
-mask   = usermask.mask;
-waitall= usermask.waitall;
+    mask   = usermask.mask;
+    waitall= usermask.waitall;
 
 }
 
@@ -274,9 +273,9 @@ waitall= usermask.waitall;
 
 typedef struct MaskStack_str MaskStack;
 struct MaskStack_str {
-	Smask      mask;
-	MaskStack *nxt,*prv;
-	};
+    Smask      mask;
+    MaskStack *nxt,*prv;
+};
 static MaskStack *mshd=NULL,*mstl=NULL;
 
 /* Smaskpush: this function pushes the current mask down on a stack
@@ -284,23 +283,23 @@ static MaskStack *mshd=NULL,*mstl=NULL;
  */
 void Smaskpush()
 {
-MaskStack *m;
+    MaskStack *m;
 
 
-/* allocate */
-m= (MaskStack *) malloc(sizeof(MaskStack));
+    /* allocate */
+    m= (MaskStack *) malloc(sizeof(MaskStack));
 
-/* link */
-if(mstl) mstl->nxt= m;
-else     mshd     = m;
-m->prv= mstl;
-mstl  = m;
+    /* link */
+    if(mstl) mstl->nxt= m;
+    else     mshd     = m;
+    m->prv= mstl;
+    mstl  = m;
 
-/* initialize */
-mstl->mask.mask   = mask;
-mstl->mask.waitall= waitall;
+    /* initialize */
+    mstl->mask.mask   = mask;
+    mstl->mask.waitall= waitall;
 
-Smaskset((Socket *) NULL);
+    Smaskset((Socket *) NULL);
 
 }
 
@@ -312,7 +311,7 @@ Smaskset((Socket *) NULL);
 void Smaskpop()
 {
 
-if(mstl) {
+    if(mstl) {
 	MaskStack *old=mstl;
 
 	Smaskuse(mstl->mask);
@@ -323,8 +322,8 @@ if(mstl) {
 	mstl= mstl->prv;
 
 	free((char *) old);
-	}
-else Smaskset((Socket *) NULL);
+    }
+    else Smaskset((Socket *) NULL);
 
 }
 
@@ -337,16 +336,11 @@ else Smaskset((Socket *) NULL);
 #ifdef __PROTOTYPE__
 int Smaskisset(Socket *skt)
 #else
-int Smaskisset(skt)
-Socket *skt;
+    int Smaskisset(skt)
+    Socket *skt;
 #endif
 {
-int ret;
-
-
-ret= FD_ISSET(skt->skt,&rmask);
-
-return ret;
+    return FD_ISSET(skt->skt,&rmask);
 }
 
 /* --------------------------------------------------------------------- */
@@ -357,16 +351,11 @@ return ret;
 #ifdef __PROTOTYPE__
 int Smaskfdisset(int fd)
 #else
-int Smaskfdisset(fd)
-int fd;
+    int Smaskfdisset(fd)
+    int fd;
 #endif
 {
-int ret;
-
-
-ret= FD_ISSET(fd,&rmask);
-
-return ret;
+    return FD_ISSET(fd,&rmask);
 }
 
 /* --------------------------------------------------------------------- */
