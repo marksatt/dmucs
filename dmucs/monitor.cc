@@ -127,6 +127,7 @@ main(int argc, char *argv[])
 	    Sclose(client_sock);
 	    return -1;
 	}
+        DMUCS_DEBUG((stderr, "monitor: got -->%s<--\n", resultStr));
 
 	parseResults(resultStr);
 	Sclose(client_sock);
@@ -136,10 +137,35 @@ main(int argc, char *argv[])
 }
 
 
-void parseResults(const char *resultStr)
+static void
+dumpSummaryInfo(std::ostringstream &availHosts, std::ostringstream &overHosts,
+                std::ostringstream &unavailHosts,
+                std::ostringstream &silentHosts, std::ostringstream &unkHosts)
+{
+    if (! availHosts.str().empty())
+        std::cout << "Avail: " << availHosts.str() << '\n';
+    if (! overHosts.str().empty())
+        std::cout << "Overloaded: " << overHosts.str() << '\n';
+    if (! unavailHosts.str().empty())
+        std::cout << "Unavail: " << unavailHosts.str() << '\n';
+    if (! silentHosts.str().empty())
+        std::cout << "Silent: " << silentHosts.str() << '\n';
+    if (! unkHosts.str().empty())
+        std::cout << "Unknown state: " << unkHosts.str() << '\n';
+    availHosts.str("");
+    overHosts.str("");
+    unavailHosts.str("");
+    silentHosts.str("");
+    unkHosts.str("");
+}    
+
+
+void
+parseResults(const char *resultStr)
 {
     /*
      * The string will look like this:
+     * D: <distinguishingProp> // a string that distinguishes these hosts.
      * H: <ip-addr> <int>      // a host, its ip address, and its state.
      * C <tier>: <ipaddr>/<#cpus>
      *
@@ -148,24 +174,46 @@ void parseResults(const char *resultStr)
      * o The entire string will end with a \0 (end-of-string) character.
      *
      * We want to parse this information, and print out :
+     * <distinguishingProp> hosts:
      * Tier <tier-num>: host/#cpus host/#cpus ...
      * Tier <tier-num>: ...
-     *
+     * Available Hosts: <host list>.
      * Silent Hosts: host/#cpus ...
      * Unavailable Hosts: host/#cpus ...
+     *
+     * <repeat above for each distinguishing prop>
      */
 
     std::istringstream instr(resultStr);
     std::ostringstream unkHosts, availHosts, unavailHosts, overHosts,
-	silentHosts;
+        silentHosts;
 
     while (1) {
-	char firstChar;
+
+        char firstChar;
 	instr >> firstChar;
 	if (instr.eof()) {
+            dumpSummaryInfo(availHosts, overHosts, unavailHosts, silentHosts,
+                            unkHosts);
 	    break;
 	}
 	switch (firstChar) {
+        case 'D': {
+
+            /* We see a "D" which means we are going to start getting
+               information for a new set of hosts.  So, if we have summary
+               information on the previous set, print it out now, and
+               clear it. */
+            dumpSummaryInfo(availHosts, overHosts, unavailHosts, silentHosts,
+                            unkHosts);
+          
+            std::string distProp;
+            instr.ignore();		// eat ':'
+            instr >> distProp;
+            if (distProp == "''")  continue;	// empty distinguishing str
+            std::cout << distProp << " hosts:" << '\n';
+            break;
+        }
 	case 'H': {
 	    std::string ipstr;
 	    int state;
@@ -221,8 +269,8 @@ void parseResults(const char *resultStr)
 		linestr.ignore();		// eat ' '
 
 		unsigned int addr = inet_addr(ipName);
-		struct hostent *he = gethostbyaddr((char *)&addr, sizeof(addr),
-						   AF_INET);
+		struct hostent *he = gethostbyaddr((char *)&addr,
+                                                   sizeof(addr), AF_INET);
 		std::ostringstream hostname;
 		hostname << ((he != NULL) ? he->h_name : ipName);
 		hostname << '/' << numCpus << ' ';
@@ -237,17 +285,6 @@ void parseResults(const char *resultStr)
 	    std::cout << line << '\n';
 	}
     }
-
-    if (! availHosts.str().empty())
-	std::cout << "Avail: " << availHosts.str() << '\n';
-    if (! overHosts.str().empty())
-	std::cout << "Overloaded: " << overHosts.str() << '\n';
-    if (! unavailHosts.str().empty())
-	std::cout << "Unavail: " << unavailHosts.str() << '\n';
-    if (! silentHosts.str().empty())
-	std::cout << "Silent: " << silentHosts.str() << '\n';
-    if (! unkHosts.str().empty())
-	std::cout << "Unknown state: " << unkHosts.str() << '\n';
 
     std::cout << '\n' << std::flush;
 }

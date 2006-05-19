@@ -28,7 +28,7 @@
 #include <pthread.h>
 
 
-class DmucsDb
+class DmucsDpropDb
 {
 private:
     struct DmucsHostCompare {
@@ -51,6 +51,7 @@ private:
     typedef dmucs_avail_cpus_t::iterator dmucs_avail_cpus_iter_t;
     typedef dmucs_avail_cpus_t::reverse_iterator dmucs_avail_cpus_riter_t;
 
+
     /* This is a mapping from sock address to host ip address -- the socket
        of the connection from the "gethost" application to the dmucs server,
        and the hostip of the cpu assigned to the "gethost" application. */
@@ -69,6 +70,7 @@ private:
      * o a collection of assigned cpus.
      */
 
+    DmucsDprop		dprop_;		// the common dprop for all hosts here.
     dmucs_host_set_t 	allHosts_;	// all known hosts are here.
 
     dmucs_host_set_t	availHosts_;	// avail hosts are also here.
@@ -85,20 +87,10 @@ private:
     int numConcurrentAssigned_; /* the max number of assigned CPUs at one
 				   time. */
     
-    DmucsDb();
-    virtual ~DmucsDb() {}
-
-    void addToHostSet(dmucs_host_set_t *theSet, DmucsHost *host);
-    void delFromHostSet(dmucs_host_set_t *theSet, DmucsHost *host);
-    void addCpusToTier(int tierNum,
-		       const unsigned int ipAddr, const int numCpus);
-
-    static DmucsDb *instance_;
-    static pthread_mutexattr_t attr_;
-    static pthread_mutex_t mutex_;
 
 public:
-    static DmucsDb *getInstance();
+
+    DmucsDpropDb(DmucsDprop dprop) : dprop_(dprop) {}
 
     DmucsHost * getHost(const struct in_addr &ipAddr);
     bool 	haveHost(const struct in_addr &ipAddr);
@@ -109,26 +101,200 @@ public:
     int 	delCpusFromTier(int tier, unsigned int ipAddr);
 
     void 	addNewHost(DmucsHost *host);
-    void	releaseCpu(const unsigned int cpuIpAddr);
+    void	releaseCpu(const unsigned int sock);
+
+    void 	addToHostSet(dmucs_host_set_t *theSet, DmucsHost *host);
+    void 	delFromHostSet(dmucs_host_set_t *theSet, DmucsHost *host);
+    void 	addCpusToTier(int tierNum,
+                              const unsigned int ipAddr, const int numCpus);
 
     void 	addToAvailDb(DmucsHost *host);
     void 	delFromAvailDb(DmucsHost *host);
-    void	addToOverloadedDb(DmucsHost *host);
-    void	delFromOverloadedDb(DmucsHost *host);
-    void	addToSilentDb(DmucsHost *host);
+    void 	addToOverloadedDb(DmucsHost *host);
+    void 	delFromOverloadedDb(DmucsHost *host);
+    void 	addToSilentDb(DmucsHost *host);
     void 	delFromSilentDb(DmucsHost *host);
-    void	addToUnavailDb(DmucsHost *host);
+    void 	addToUnavailDb(DmucsHost *host);
     void 	delFromUnavailDb(DmucsHost *host);
-
+    
     void	handleSilentHosts();
     std::string	serialize();
     void	getStatsFromDb(int *served, int *max, int *totalCpus);
     void	dump();
 };
 
+class MutexMonitor
+{
+ public:
+    MutexMonitor(pthread_mutex_t *m) : m_(m)
+    {
+	pthread_mutex_lock(m_);
+    }
+    ~MutexMonitor()
+    {
+	pthread_mutex_unlock(m_);
+    }
+ private:
+    pthread_mutex_t *m_;
+};
+
+
+class DmucsDb
+{
+private:
+    typedef std::map<DmucsDprop, DmucsDpropDb> dmucs_dprop_db_t;
+    typedef dmucs_dprop_db_t::iterator dmucs_dprop_db_iter_t;
+
+    /* A map of dmucs databases, indexed by the distinguishing property of
+       hosts in the system. */
+    dmucs_dprop_db_t  dbDb_;		
+
+    /* A mapping of socket to distinguishing property -- so that when a
+       host is released and all we have is the socket information, we can
+       figure out which DpropDb to put the host back into. */
+    typedef std::map<int, DmucsDprop> dmucs_sock_dprop_db_t;
+    typedef dmucs_sock_dprop_db_t::iterator dmucs_sock_dprop_db_iter_t;
+
+    dmucs_sock_dprop_db_t sock2DpropDb_;
+
+    static DmucsDb *instance_;
+    static pthread_mutexattr_t attr_;
+    static pthread_mutex_t mutex_;
+
+    DmucsDb();
+    virtual ~DmucsDb() {}
+
+public:
+    static DmucsDb *getInstance();
+
+    DmucsHost *getHost(const struct in_addr &ipAddr, DmucsDprop dprop) {
+	MutexMonitor m(&mutex_);
+	dmucs_dprop_db_iter_t itr = dbDb_.find(dprop);
+	if (itr == dbDb_.end()) {
+	    throw DmucsHostNotFound();
+	}
+	return itr->second.getHost(ipAddr);
+    }
+    bool haveHost(const struct in_addr &ipAddr, DmucsDprop dprop)  {
+	MutexMonitor m(&mutex_);
+	dmucs_dprop_db_iter_t itr = dbDb_.find(dprop);
+	if (itr == dbDb_.end()) {
+	    return false;
+	}
+	return itr->second.haveHost(ipAddr);
+    }
+    unsigned int getBestAvailCpu(DmucsDprop dprop) {
+	MutexMonitor m(&mutex_);
+	dmucs_dprop_db_iter_t itr = dbDb_.find(dprop);
+	if (itr == dbDb_.end()) {
+            fprintf(stderr, "nothing in this db!: dprop %s\n",
+                         dprop2cstr(dprop));
+	    return 0L;		// 32-bits of zeros = 0.0.0.0 
+	}
+	return itr->second.getBestAvailCpu();
+    }
+    void assignCpuToClient(const unsigned int clientIp,
+                           const DmucsDprop dprop,
+                           const unsigned int sock);
+    void moveCpus(DmucsHost *host, int oldTier, int newTier) {
+	MutexMonitor m(&mutex_);
+	// Assume the DmucsDpropDb is definitely there.
+	return dbDb_.find(host->getDprop())->second.moveCpus(host, oldTier,
+							     newTier);
+    }
+    int delCpusFromTier(DmucsHost *host,
+                        int tier, unsigned int ipAddr) {
+	MutexMonitor m(&mutex_);
+	// Assume the DmucsDpropDb is definitely there.
+	return dbDb_.find(host->getDprop())->second.delCpusFromTier(tier,
+								    ipAddr);
+    }
+
+    void addNewHost(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	DmucsDprop dprop = host->getDprop();
+	dmucs_dprop_db_iter_t itr = dbDb_.find(dprop);
+	if (itr == dbDb_.end()) {
+	    std::pair<dmucs_dprop_db_iter_t, bool> status =
+		dbDb_.insert(std::make_pair(dprop, DmucsDpropDb(dprop)));
+	    if (!status.second) {
+		fprintf(stderr, "%s: could not make a new Dprop-specific db\n",
+			__func__);
+		return;
+	    }
+	    itr = status.first;
+	}
+	return itr->second.addNewHost(host);
+    }
+    void addToAvailDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.addToAvailDb(host);
+    }
+    void delFromAvailDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.delFromAvailDb(host);
+    };
+    void addToOverloadedDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.addToOverloadedDb(host);
+    }
+    void delFromOverloadedDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.delFromOverloadedDb(host);
+    }
+    void addToSilentDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.addToSilentDb(host);
+    }
+    void delFromSilentDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.delFromSilentDb(host);
+    }
+    void addToUnavailDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.addToUnavailDb(host);
+    }
+    void delFromUnavailDb(DmucsHost *host) {
+	MutexMonitor m(&mutex_);
+	return dbDb_.find(host->getDprop())->second.delFromUnavailDb(host);
+    }
+
+    void releaseCpu(const unsigned int sock);
+
+    void handleSilentHosts() {
+	MutexMonitor m(&mutex_);
+	for (dmucs_dprop_db_iter_t itr = dbDb_.begin();
+             itr != dbDb_.end(); ++itr) {
+	    itr->second.handleSilentHosts();
+	}
+    }
+    std::string	serialize() {
+	MutexMonitor m(&mutex_);
+	std::string res;
+	for (dmucs_dprop_db_iter_t itr = dbDb_.begin();
+	     itr != dbDb_.end(); ++itr) {
+	    res += itr->second.serialize();
+	}
+	return res;
+    }
+    void getStatsFromDb(int *served, int *max, int *totalCpus) {
+	MutexMonitor m(&mutex_);
+        int t_serv = 0, t_max = 0, t_total = 0;
+	for (dmucs_dprop_db_iter_t itr = dbDb_.begin();
+	     itr != dbDb_.end(); ++itr) {
+	    itr->second.getStatsFromDb(&t_serv, &t_max, &t_total);
+            *served += t_serv;
+            *max += t_max;
+            *totalCpus += t_total;
+	}
+    }
+    void	dump();
+};
+
 
 inline bool
-DmucsDb::DmucsHostCompare::operator() (DmucsHost *lhs, DmucsHost *rhs) const
+DmucsDpropDb::DmucsHostCompare::operator() (DmucsHost *lhs,
+					    DmucsHost *rhs) const
 {
     // Just do pointer comparison.
     return (lhs->getIpAddrInt() < rhs->getIpAddrInt());

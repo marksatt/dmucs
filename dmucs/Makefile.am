@@ -3,7 +3,7 @@ SUBDIRS = COSMIC
 bin_PROGRAMS = dmucs gethost loadavg monitor remhost
 
 dmucs_SOURCES = dmucs_resolve.cc dmucs_db.cc dmucs_host.cc \
-	dmucs_hosts_file.cc dmucs_pkt.cc dmucs_host_state.cc main.cc
+	dmucs_hosts_file.cc dmucs_msg.cc dmucs_host_state.cc main.cc
 
 LDADD = COSMIC/simpleskts.a
 

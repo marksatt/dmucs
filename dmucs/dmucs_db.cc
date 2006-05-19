@@ -32,20 +32,12 @@ DmucsDb *DmucsDb::instance_ = NULL;
 pthread_mutex_t DmucsDb::mutex_;
 pthread_mutexattr_t DmucsDb::attr_;
 
-class MutexMonitor
-{
- public:
-    MutexMonitor(pthread_mutex_t *m) : m_(m)
-    {
-	pthread_mutex_lock(m_);
-    }
-    ~MutexMonitor()
-    {
-	pthread_mutex_unlock(m_);
-    }
- private:
-    pthread_mutex_t *m_;
-};
+const char *
+dprop2cstr(DmucsDprop d) {
+    return d.c_str();
+}
+
+
 
 
 DmucsDb::DmucsDb()
@@ -68,16 +60,49 @@ DmucsDb::getInstance()
 }
 
 
+void
+DmucsDb::assignCpuToClient(const unsigned int clientIp,
+                           const DmucsDprop dprop,
+                           const unsigned int sock)
+{
+    MutexMonitor m(&mutex_);
+
+    /* add sock -> dprop mapping */
+    sock2DpropDb_.insert(std::make_pair(sock, dprop));
+    return dbDb_.find(dprop)->second.assignCpuToClient(clientIp, sock);
+}
+
+
+void
+DmucsDb::releaseCpu(const unsigned int sock)
+{
+    /* Get the dprop so that we can release the cpu back into the
+       correct sub-db in the DmucsDb. */
+    dmucs_sock_dprop_db_iter_t itr = sock2DpropDb_.find(sock);
+    if (itr == sock2DpropDb_.end()) {
+        DMUCS_DEBUG((stderr, "No sock->dprop mapping found!\n"));
+        return;
+    }
+    DmucsDprop dprop = itr->second;
+    sock2DpropDb_.erase(itr);
+    dbDb_.find(dprop)->second.releaseCpu(sock);
+}
+
+
+/* ---------------------------------------------------------------------- */
+/* DmucsDpropDb methods.						  */
+/* ---------------------------------------------------------------------- */
+   
+
 /*
  * getHost: search for the DmucsHost object in the various sets, and return
  * it when it is found.  If it is not found, throw a DmucsHostNotFound
  * exception. 
  */
 DmucsHost *
-DmucsDb::getHost(const struct in_addr &ipAddr)
+DmucsDpropDb::getHost(const struct in_addr &ipAddr)
 {
-    MutexMonitor m(&mutex_);
-    DmucsHost host(ipAddr, 0, 0);
+    DmucsHost host(ipAddr, dprop_, 0, 0);
     dmucs_host_set_iter_t hptr = allHosts_.find(&host);
     if (hptr == allHosts_.end()) {
 	throw DmucsHostNotFound(/* ipaddr */);
@@ -87,10 +112,9 @@ DmucsDb::getHost(const struct in_addr &ipAddr)
 
 
 bool
-DmucsDb::haveHost(const struct in_addr &ipAddr)
+DmucsDpropDb::haveHost(const struct in_addr &ipAddr)
 {
-    MutexMonitor m(&mutex_);
-    DmucsHost host(ipAddr, 0, 0);
+    DmucsHost host(ipAddr, dprop_, 0, 0);
     return (allHosts_.find(&host) != allHosts_.end());
 }
 
@@ -99,9 +123,8 @@ DmucsDb::haveHost(const struct in_addr &ipAddr)
  * return the IP address of a randomly-selected, highest-tier available cpu
  */
 unsigned int
-DmucsDb::getBestAvailCpu()
+DmucsDpropDb::getBestAvailCpu()
 {
-    MutexMonitor m(&mutex_);
     unsigned int result = 0UL;
     for (dmucs_avail_cpus_riter_t itr = availCpus_.rbegin();
 	 itr != availCpus_.rend(); ++itr) {
@@ -122,15 +145,13 @@ DmucsDb::getBestAvailCpu()
 
 
 void
-DmucsDb::assignCpuToClient(const unsigned int hostIp,
-			   const unsigned int sock)
+DmucsDpropDb::assignCpuToClient(const unsigned int hostIp,
+                                const unsigned int sock)
 {
     struct in_addr t2;
     t2.s_addr = hostIp;
 
     DMUCS_DEBUG((stderr, "assignCpu hostip %s\n", inet_ntoa(t2)));
-
-    MutexMonitor m(&mutex_);
 
     assignedCpus_.insert(std::make_pair(sock, hostIp));
     numAssignedCpus_++;
@@ -143,15 +164,13 @@ DmucsDb::assignCpuToClient(const unsigned int hostIp,
 
 
 void
-DmucsDb::releaseCpu(const unsigned int sock)
+DmucsDpropDb::releaseCpu(const unsigned int sock)
 {
-    MutexMonitor m(&mutex_);
-
     DMUCS_DEBUG((stderr, "releaseCpu for socket 0x%x\n", sock));
 
     dmucs_assigned_cpus_iter_t itr = assignedCpus_.find(sock);
     if (itr == assignedCpus_.end()) {
-	DMUCS_DEBUG((stderr,"No cpu found in assignedCpus for sock 0x%x\n",
+	DMUCS_DEBUG((stderr, "No cpu found in assignedCpus for sock 0x%x\n",
 		     sock));
 	return;
     }
@@ -184,12 +203,13 @@ DmucsDb::releaseCpu(const unsigned int sock)
 
 
 std::string
-DmucsDb::serialize()
+DmucsDpropDb::serialize()
 {
     /*
      * We will encode the database this way: it will be a big long string
      * with newlines in it.  The lines will look like this:
-     * H: <ip-addr> <int>      // a host, its ip address, and its state.
+     * D: <distingishingProp>       (the string that distinguishes these hosts)
+     * H: <ip-addr> <int> <state>
      * C <tier>: <ipaddr>/<#cpus>
      *
      * o The state is represented by an integer representing the
@@ -197,8 +217,9 @@ DmucsDb::serialize()
      * o The entire string will end with a \0 (end-of-string) character.
      */
     std::ostringstream result;
-    
-    MutexMonitor m(&mutex_);
+
+    result << "D: '" << dprop2cstr(dprop_) << "'\n";
+
     for (dmucs_host_set_iter_t itr = allHosts_.begin();
 	 itr != allHosts_.end(); ++itr) {
 	struct in_addr in;
@@ -244,17 +265,14 @@ DmucsDb::serialize()
 	}
 	result << '\n';
     }
-#if 0
     fprintf(stderr, "Serialize: -->%s<--\n", result.str().c_str());
-#endif
     return result.str();
 }
 
 
 void
-DmucsDb::addNewHost(DmucsHost *host)
+DmucsDpropDb::addNewHost(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     /*
      * Add the host to the allHosts_ set and then also to the availHosts_
      * sub-set.
@@ -265,9 +283,8 @@ DmucsDb::addNewHost(DmucsHost *host)
 
 
 void
-DmucsDb::addToHostSet(dmucs_host_set_t *theSet, DmucsHost *host)
+DmucsDpropDb::addToHostSet(dmucs_host_set_t *theSet, DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     std::pair<dmucs_host_set_iter_t, bool> status = theSet->insert(host);
     if (!status.second) {
 	fprintf(stderr, "%s: Waaaaaah!!!!\n", __func__);
@@ -276,9 +293,8 @@ DmucsDb::addToHostSet(dmucs_host_set_t *theSet, DmucsHost *host)
 
 
 void
-DmucsDb::delFromHostSet(dmucs_host_set_t *theSet, DmucsHost *host)
+DmucsDpropDb::delFromHostSet(dmucs_host_set_t *theSet, DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     dmucs_host_set_iter_t itr = theSet->find(host);
 
     if (itr == theSet->end()) {
@@ -290,18 +306,16 @@ DmucsDb::delFromHostSet(dmucs_host_set_t *theSet, DmucsHost *host)
 
 
 void
-DmucsDb::addToAvailDb(DmucsHost *host)
+DmucsDpropDb::addToAvailDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     addToHostSet(&availHosts_, host);
     addCpusToTier(host->getTier(), host->getIpAddrInt(), host->getNumCpus());
 }
 
 
 void
-DmucsDb::delFromAvailDb(DmucsHost *host)
+DmucsDpropDb::delFromAvailDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     dmucs_avail_cpus_iter_t itr = availCpus_.find(host->getTier());
     if (itr == availCpus_.end()) {
 	fprintf(stderr, "%s: could not find tier in avail cpu db\n", __func__);
@@ -314,49 +328,43 @@ DmucsDb::delFromAvailDb(DmucsHost *host)
 
 
 void
-DmucsDb::addToOverloadedDb(DmucsHost *host)
+DmucsDpropDb::addToOverloadedDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     addToHostSet(&overloadedHosts_, host);
 }
 
 
 void
-DmucsDb::delFromOverloadedDb(DmucsHost *host)
+DmucsDpropDb::delFromOverloadedDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     delFromHostSet(&overloadedHosts_, host);
 }
 
 
 void
-DmucsDb::addToSilentDb(DmucsHost *host)
+DmucsDpropDb::addToSilentDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     addToHostSet(&silentHosts_, host);
 }
 
 
 void
-DmucsDb::delFromSilentDb(DmucsHost *host)
+DmucsDpropDb::delFromSilentDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     delFromHostSet(&silentHosts_, host);
 }
 
 
 void
-DmucsDb::addToUnavailDb(DmucsHost *host)
+DmucsDpropDb::addToUnavailDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     addToHostSet(&unavailHosts_, host);
 }
 
 
 void
-DmucsDb::delFromUnavailDb(DmucsHost *host)
+DmucsDpropDb::delFromUnavailDb(DmucsHost *host)
 {
-    MutexMonitor m(&mutex_);
     delFromHostSet(&unavailHosts_, host);
 }
 
@@ -364,10 +372,9 @@ DmucsDb::delFromUnavailDb(DmucsHost *host)
 
 /* Add "numCpus" copies of the ipaddress to the list in the given tier. */
 void
-DmucsDb::addCpusToTier(int tierNum,
-		       const unsigned int ipAddr, const int numCpus)
+DmucsDpropDb::addCpusToTier(int tierNum, const unsigned int ipAddr,
+			      const int numCpus)
 {
-    MutexMonitor m(&mutex_);
     /*
      * If a tier, doesn't exist yet, create one.
      */
@@ -386,9 +393,8 @@ DmucsDb::addCpusToTier(int tierNum,
 }
 
 void
-DmucsDb::moveCpus(DmucsHost *host, int oldTier, int newTier)
+DmucsDpropDb::moveCpus(DmucsHost *host, int oldTier, int newTier)
 {
-    MutexMonitor m(&mutex_);
     int numCpusDel = delCpusFromTier(oldTier, host->getIpAddrInt());
     addCpusToTier(newTier, host->getIpAddrInt(), numCpusDel);
 }
@@ -396,9 +402,8 @@ DmucsDb::moveCpus(DmucsHost *host, int oldTier, int newTier)
 
 /* Return the number of cpus removed from the tier. */
 int
-DmucsDb::delCpusFromTier(int tier, unsigned int ipAddr)
+DmucsDpropDb::delCpusFromTier(int tier, unsigned int ipAddr)
 {
-    MutexMonitor m(&mutex_);
     dmucs_avail_cpus_iter_t itr = availCpus_.find(tier);
     if (itr == availCpus_.end()) {
 	fprintf(stderr, "OOOOUCCCH: shouldn't happen\n");
@@ -419,10 +424,8 @@ DmucsDb::delCpusFromTier(int tier, unsigned int ipAddr)
 
 
 void
-DmucsDb::handleSilentHosts()
+DmucsDpropDb::handleSilentHosts()
 {
-    MutexMonitor m(&mutex_);
-
     for (dmucs_host_set_iter_t itr = allHosts_.begin();
 	 itr != allHosts_.end(); ++itr) {
 	if ((*itr)->seemsDown()) {
@@ -433,9 +436,8 @@ DmucsDb::handleSilentHosts()
 
 
 void
-DmucsDb::dump()
+DmucsDpropDb::dump()
 {
-    MutexMonitor m(&mutex_);
     fprintf(stderr, "ALLHOSTS:\n");
     for (dmucs_host_set_iter_t itr = allHosts_.begin();
 	 itr != allHosts_.end(); ++itr) {
@@ -501,9 +503,8 @@ DmucsDb::dump()
  * collection period.
  */
 void
-DmucsDb::getStatsFromDb(int *served, int *max, int *totalCpus)
+DmucsDpropDb::getStatsFromDb(int *served, int *max, int *totalCpus)
 {
-    MutexMonitor m(&mutex_);
     *served = numAssignedCpus_;
     numAssignedCpus_ = 0;
     *max = numConcurrentAssigned_;

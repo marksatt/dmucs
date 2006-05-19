@@ -62,6 +62,7 @@ main(int argc, char *argv[])
     std::ostringstream serverName;
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
+    char *distingProp = '\0';
 
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
@@ -79,6 +80,13 @@ main(int argc, char *argv[])
 		return -1;
 	    }
 	    serverPortNum = atoi(argv[nextarg]);
+        } else if (strequ("-t", argv[nextarg]) ||
+                   strequ("--type", argv[nextarg])) {
+            if (++nextarg >= argc) {
+                usage(argv[0]);
+                return -1;
+            }
+            distingProp = argv[nextarg];
 	} else if (strequ("-D", argv[nextarg]) ||
 		   strequ("--debug", argv[nextarg])) {
 	    debugMode = true;
@@ -120,10 +128,13 @@ main(int argc, char *argv[])
     getsockname(client_sock->skt, &sck, &s);
     struct sockaddr_in *sin = (struct sockaddr_in *) &sck;
 
+    /* If the name of the program is "addhost", then send "up" to the
+       dmucs server.  Otherwise, send "down". */
     const char *op = (strstr(argv[0], "addhost") != NULL) ? "up" : "down";
 
     std::ostringstream clientReqStr;
-    clientReqStr << "status " << inet_ntoa(in) << " " << op;
+    clientReqStr << "status " << inet_ntoa(in) << " " << op << " "
+                 << distingProp;
     DMUCS_DEBUG((stderr, "Writing -->%s<-- to the server\n",
 		 clientReqStr.str().c_str()));
 
@@ -140,5 +151,5 @@ void
 usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [-s|--server <server>] [-p|--port <port>] "
-	    "[-D|--debug] <command> [args] \n\n", prog);
+	    "[-t|--type <str>] [-D|--debug] <command> [args] \n\n", prog);
 }

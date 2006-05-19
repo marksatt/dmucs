@@ -2,7 +2,7 @@
 #define _DMUCS_PKT_H_
 
 /*
- * dmucs_pkt.h: definition of a DMUCS packet received by the DMUCS server.
+ * dmucs_msg.h: definition of a DMUCS packet received by the DMUCS server.
  *
  * Copyright (C) 2005, 2006  Victor T. Norman
  *
@@ -56,7 +56,10 @@ protected:
 public:
     /* Factory Method: parseMsg */
     static DmucsMsg *parseMsg(Socket *sock, const char *buf);
+
+    virtual void handle(Socket *sock, const char *buf) = 0;
 };
+
 
 class DmucsStatusMsg : public DmucsMsg
 {
@@ -71,7 +74,9 @@ public:
 		   host_status_t status, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop), 
 	host_(host), status_(status), numCpus_(1), powerIndex_(1) {}
+    void handle(Socket *sock, const char *buf);
 };
+
 
 class DmucsLdAvgMsg : public DmucsMsg
 {
@@ -85,6 +90,7 @@ public:
 		  float ldavg10, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop), 
 	host_(host), ldAvg1_(ldavg1), ldAvg5_(ldavg5), ldAvg10_(ldavg10) {}
+    void handle(Socket *sock, const char *buf);
 };
 
 
@@ -93,14 +99,16 @@ class DmucsHostReqMsg : public DmucsMsg
 public:
     DmucsHostReqMsg(struct in_addr clientIp, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop) {}
+    void handle(Socket *sock, const char *buf);
 };
+
 
 class DmucsMonitorReqMsg : public DmucsMsg
 {
 public:
     DmucsMonitorReqMsg(struct in_addr clientIp, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop) {};
-    // value of dprop doesn't matter.
+    void handle(Socket *sock, const char *buf);
 };
 
 

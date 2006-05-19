@@ -26,67 +26,85 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-class DmucsBadReq : public std::exception {};
+class DmucsBadMsg : public std::exception {};
 
 
-DmucsReq *
-DmucsReq::parseReq(Socket *sock, const char *buffer)
+DmucsMsg *
+DmucsMsg::parseMsg(Socket *sock, const char *buffer)
 {
-    DmucsReq *req = new DmucsReq();
+    struct in_addr clientIp;
+    clientIp.s_addr = Speeraddr(sock);
+    char dpropstr[DPROP_MAX_STRLEN + 1];
+    dpropstr[0] = '\0';		// empty string
 
     /*
      * The first word in the buffer must be one of: "host", "load",
      * "status", or "monitor".
      */
     if (strncmp(buffer, "host", 4) == 0) {
-	req->reqType = HOST_REQ;
+	/* The string might not be just "host" in which case it will be
+	   followed by a dprop to indicate which sub-database to get the
+	   host from. */
+	int res = sscanf(buffer, "host %s", dpropstr);
+	if (res != 1 && res != 0) {
+	    fprintf(stderr, "Got a bad host request message ->%s<--\n",buffer);
+	    return NULL;
+	}
+	return new DmucsHostReqMsg(clientIp, dpropstr);
     } else if (strncmp(buffer, "load", 4) == 0) {
-	req->reqType = LOAD_AVERAGE_INFORM;
 
 	/* The buffer must hold:
 	 * load <host-IP-address> <3 floating pt numbers>
+	 * followed by an optional <dprop>.
 	 */
 	char machname[64];
 	float ldavg1, ldavg5, ldavg10;
 	if (sscanf(buffer, "load %s %f %f %f", machname, &ldavg1,
 		   &ldavg5, &ldavg10) != 4) {
-	    fprintf(stderr, "Got a bad load avg msg!!!\n");
+	    if (sscanf(buffer, "load %s %f %f %f %s", machname, &ldavg1,
+		       &ldavg5, &ldavg10, dpropstr) != 5) {
+		fprintf(stderr, "Got a bad load avg msg!!!\n");
+		return NULL;
+	    }
 	}
-	req->u.ldAvgData.host.s_addr = inet_addr(machname);
-	req->u.ldAvgData.ldAvg1 = ldavg1;
-	req->u.ldAvgData.ldAvg5 = ldavg5;
-	req->u.ldAvgData.ldAvg10 = ldavg10;
+	struct in_addr host;
+	host.s_addr = inet_addr(machname);
 	DMUCS_DEBUG((stderr, "host %s: ldAvg1 %2.2f, ldAvg5 %2.2f, "
-		     "ldAvg10 %2.2f\n", machname, ldavg1, ldavg5, ldavg10));
+		     "ldAvg10 %2.2f, dprop '%s'\n",
+		     machname, ldavg1, ldavg5, ldavg10, dpropstr));
+	return new DmucsLdAvgMsg(clientIp, host,
+				  ldavg1, ldavg5, ldavg10, dpropstr);
     } else if (strncmp(buffer, "status", 6) == 0) {
-	req->reqType = STATUS_INFORM;
 	/* The buffer must hold:
-	 * status <host-IP-address> up|down
+	 * status <host-IP-address> up|down [<dprop>]
 	 * NOTE: the host-IP-address MUST be in "dot-notation".
 	 */
 	char machname[64];
 	char state[10];
 	if (sscanf(buffer, "status %s %s", machname, state) != 2) {
-	    fprintf(stderr, "Got a bad req!!!\n");
+	    if (sscanf(buffer, "status %s %s %s", machname, state,
+		       dpropstr) != 3) {
+		fprintf(stderr, "Got a bad status msg!!!\n");
+		return NULL;
+	    }
 	}
-	fprintf(stderr, "machname %s, state %s\n", machname, state);
-	req->u.statusData.host.s_addr = inet_addr(machname);
+	fprintf(stderr, "machname %s, state %s, dprop '%s'\n",
+		machname, state, dpropstr);
+	struct in_addr host;
+	host.s_addr = inet_addr(machname);
+	host_status_t status;
 	if (strncmp(state, "up", 2) == 0) {
-	    req->u.statusData.status = STATUS_AVAILABLE;
+	    status = STATUS_AVAILABLE;
 	} else if (strncmp(state, "down", 4) == 0) {
-	    req->u.statusData.status = STATUS_UNAVAILABLE;
+	    status = STATUS_UNAVAILABLE;
 	} else {
 	    fprintf(stderr, "got unknown state %s\n", state);
 	}
-	
+	return new DmucsStatusMsg(clientIp, host, status, dpropstr);
     } else if (strncmp(buffer, "monitor", 7) == 0) {
-	req->reqType = MONITOR_REQ;
-    } else {
-	fprintf(stderr, "request not recognized\n");
-	throw DmucsBadReq();
+	return new DmucsMonitorReqMsg(clientIp, dpropstr);
     }
 
-    req->clientIp.s_addr = Speeraddr(sock);
-
-    return req;
+    fprintf(stderr, "request not recognized: ->%s<-\n", buffer);
+    return NULL;
 }

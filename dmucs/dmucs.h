@@ -46,4 +46,10 @@ extern bool debugMode;
 #define SERVER_PORT_NUM 9714
 #endif
 
+#include "COSMIC/HDR/sockets.h"
+
+void addFd(Socket *sock);
+void removeFd(Socket *sock);
+
+
 #endif

@@ -21,7 +21,8 @@
  */
 
 #include "dmucs.h"
-#include "dmucs_pkt.h"
+#include "dmucs_dprop.h"
+#include "dmucs_msg.h"
 #include "dmucs_hosts_file.h"
 #include "dmucs_host.h"
 #include "dmucs_db.h"
@@ -29,7 +30,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <fstream>
 #include <sys/types.h>
 #include <unistd.h>
@@ -41,7 +41,6 @@
 #include "COSMIC/HDR/sockets.h"
 
 
-static void getHostForClient(Socket *sock);
 static void spawn_stats_thread();
 static void spawn_silent_thread();
 static void *doSilentSearch(void *bogus);
@@ -49,13 +48,16 @@ static void *updateStats(void *bogus);
 static void usage(const char *prog);
 static void handleReq(Socket *server, DmucsDb *db);
 static char* peer2buf(const Socket *server, char *buf);
-static void addFd(Socket *sock);
-static void removeFd(Socket *sock);
+
+void addFd(Socket *sock);
+void removeFd(Socket *sock);
 
 bool debugMode = false;
-static std::string hostsInfoFile = HOSTS_INFO_FILE;
+
+std::string hostsInfoFile = HOSTS_INFO_FILE;
 
 static std::list<Socket *> fdList;
+static std::map<Socket *, DmucsDprop> dpropMap;
 
 
 int
@@ -173,7 +175,7 @@ main(int argc, char *argv[])
 	    for (it = fdList.begin(); it != fdList.end(); ++it) {
 		if (Smaskisset(*it)) {
 		    DMUCS_DEBUG((stderr,
-				 "\n----- Server: Handle client request -----\n"));
+				 "\n--- Server: Handle client request ---\n"));
 		    handleReq(*it, db);
 		    /* handleReq could change the list so we have to jump out
 		       here. */
@@ -206,40 +208,6 @@ main(int argc, char *argv[])
 }
 
 
-static void
-getHostForClient(Socket *sock)
-{
-    DmucsDb *db = DmucsDb::getInstance();
-    unsigned int cpuIpAddr = 0;
-
-    try {
-	cpuIpAddr = db->getBestAvailCpu();
-	std::string resolved_name = DmucsHost::resolveIp2Name(cpuIpAddr);
-
-	fprintf(stderr, "Giving out %s\n", resolved_name.c_str());
-
-	db->assignCpuToClient(cpuIpAddr, (unsigned int) sock);
-#if 0
-	fprintf(stderr, "The databases are now:\n");
-	db->dump();
-#endif
-
-    } catch (DmucsNoMoreHosts &e) {
-	/* getBestAvailCpu() might return 0, when there are
-	   no more available CPUs.  We send 0.0.0.0 to the client
-	   but we don't record it as an assigned cpu. */
-	fprintf(stderr, "!!!!!      Out of hosts    !!!!!\n");
-    } catch (...) {
-	fprintf(stderr, "!!!!!  Some other error: %s!!!!!\n",
-		strerror(errno));
-	// Send 0.0.0.0 to the client.
-    }
-
-    struct in_addr c;
-    c.s_addr = cpuIpAddr;
-    Sputs(inet_ntoa(c), sock);
-
-}
 
 
 static void
@@ -322,74 +290,15 @@ handleReq(Socket *sock_req, DmucsDb *db)
 	return;
     }
 
-    DmucsReq *req = DmucsReq::parseReq(sock_req, buf);
-    if (req == NULL) {
-	fprintf(stderr, "Got bad request on socket.  Continuing.\n");
+    DmucsMsg *msg = DmucsMsg::parseMsg(sock_req, buf);
+    if (msg == NULL) {
+	fprintf(stderr, "Got bad message on socket.  Continuing.\n");
 	removeFd(sock_req);
 	return;
     }
 
-    switch (req->reqType) {
-    case HOST_REQ: {
-	DMUCS_DEBUG((stderr, "Got host request: %s\n", buf));
-	getHostForClient(sock_req);
-	break;
-    }
-    case LOAD_AVERAGE_INFORM: {
-	DMUCS_DEBUG((stderr, "Got load average mesg: %s\n",
-		     peer2buf(sock_req, buf)));
-	try {
-	    DmucsHost *host = db->getHost(req->u.ldAvgData.host);
-	    /* If the host hasn't been explicitly made unavailable,
-	       then make it available. */
-	    if (! host->isUnavailable()) {
-		host->avail();      // make sure the host is available
-	    }
-	    host->updateTier(req->u.ldAvgData.ldAvg1,
-			     req->u.ldAvgData.ldAvg5,
-			     req->u.ldAvgData.ldAvg10);
-	} catch (DmucsHostNotFound &e) {
-	    DmucsHost *h = DmucsHost::createHost(req->u.ldAvgData.host,
-						 hostsInfoFile);
-	    h->updateTier(req->u.ldAvgData.ldAvg1, req->u.ldAvgData.ldAvg5,
-			  req->u.ldAvgData.ldAvg10);
-	    fprintf(stderr, "New host available: %s/%d (tier %d)\n",
-		    h->getName().c_str(), h->getNumCpus(), h->getTier());
-	} catch (...) {
-	}
-	removeFd(sock_req);
-	break;
-    }
-    case STATUS_INFORM: {
-	if (req->u.statusData.status == STATUS_AVAILABLE) {
-	    if (db->haveHost(req->u.statusData.host)) {
-		/* Make it available (if it wasn't). */
-		db->getHost(req->u.statusData.host)->avail();
-	    } else {
-		/* A new host is available! */
-		DMUCS_DEBUG((stderr, "Creating new host %s\n",
-			     inet_ntoa(req->u.statusData.host)));
-		DmucsHost::createHost(req->u.statusData.host, hostsInfoFile);
-	    }
-	} else {    // status is unavailable.
-	    db->getHost(req->u.statusData.host)->unavail();
-	}
-	removeFd(sock_req);
-	break;
-    }
-    case MONITOR_REQ: {
-	std::string str = db->serialize();
-	Sputs((char *) str.c_str(), sock_req);
-	removeFd(sock_req);
-	break;
-    }
-    default: {
-	fprintf(stderr, "Bad request: %s\n", buf);
-	removeFd(sock_req);
-    }
-    } // switch
-
-    delete req;
+    msg->handle(sock_req, buf);
+    delete msg;
 }
 
 
@@ -406,14 +315,15 @@ peer2buf(const Socket *sock, char *buf)
 }
 
 
-static void
+void
 addFd(Socket *sock)
 {
     fdList.push_back(sock);
     Smaskset(sock);
 }
 
-static void
+
+void
 removeFd(Socket *sock)
 {
     Smaskunset(sock);

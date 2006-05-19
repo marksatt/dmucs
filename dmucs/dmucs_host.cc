@@ -19,6 +19,7 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include "dmucs_dprop.h"
 #include "dmucs_host.h"
 #include "dmucs_db.h"
 #include "dmucs_hosts_file.h"
@@ -36,8 +37,9 @@
 
 
 DmucsHost::DmucsHost(const struct in_addr &ipAddr,
+		     const DmucsDprop dprop,
 		     const int numCpus, const int powerIndex) :
-    ipAddr_(ipAddr), ncpus_(numCpus), pindex_(powerIndex),
+    ipAddr_(ipAddr), dprop_(dprop), ncpus_(numCpus), pindex_(powerIndex),
     ldavg1_(0), ldavg5_(0), ldavg10_(0),
     lastUpdate_(0)
 {
@@ -47,6 +49,7 @@ DmucsHost::DmucsHost(const struct in_addr &ipAddr,
 
 DmucsHost *
 DmucsHost::createHost(const struct in_addr &ipAddr,
+		      const DmucsDprop dprop,
 		      const std::string &hostsInfoFile)
 {
     /*
@@ -56,7 +59,7 @@ DmucsHost::createHost(const struct in_addr &ipAddr,
     int numCpus = 1;
     int powerIndex = 1;
     hostsFile->getDataForHost(ipAddr, &numCpus, &powerIndex);
-    DmucsHost *newHost = new DmucsHost(ipAddr, numCpus, powerIndex);
+    DmucsHost *newHost = new DmucsHost(ipAddr, dprop, numCpus, powerIndex);
 
     DmucsDb::getInstance()->addNewHost(newHost);
 
@@ -178,8 +181,9 @@ DmucsHost::isUnavailable() const
 void
 DmucsHost::dump()
 {
-    fprintf(stderr, "Host: %20.20s    State: %s    Pindex: %d Ncpus %d\n",
-	    inet_ntoa(ipAddr_), state_->dump(),
+    fprintf(stderr,
+	    "Host: %20.20s  Dprop: %8.8s  State: %s Pindex: %d Ncpus %d\n",
+	    inet_ntoa(ipAddr_), dprop2cstr(dprop_), state_->dump(),
 	    pindex_, ncpus_);
 }
 
@@ -201,10 +205,10 @@ DmucsHost::getName()
  * in the host and return the string.
  */
 std::string
-DmucsHost::resolveIp2Name(unsigned int ipAddr)
+DmucsHost::resolveIp2Name(unsigned int ipAddr, DmucsDprop dprop)
 {
     /* Search for DmucsHost, based on Ip Address */
     struct in_addr c;
     c.s_addr = ipAddr;
-    return DmucsDb::getInstance()->getHost(c)->getName();
+    return DmucsDb::getInstance()->getHost(c, dprop)->getName();
 }

@@ -63,11 +63,14 @@ main(int argc, char *argv[])
      *
      * -s <server>, --server <server>: the name of the server machine.
      * -p <port>, --port <port>: the port number to listen on (default: 6714).
+     * -t <distinguishing-type-str>: a string that indicates which type
+     *    of host the compilation machine is.
      * -D, --debug: debug mode (default: off)
      */
     std::ostringstream serverName;
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
+    std::string distingProp = "";
 
     for (int i = 1; i < argc; i++) {
 	if (strequ("-s", argv[i]) || strequ("--server", argv[i])) {
@@ -83,6 +86,12 @@ main(int argc, char *argv[])
 		return -1;
 	    }
 	    serverPortNum = atoi(argv[i]);
+	} else if (strequ("-t", argv[i]) || strequ("--type", argv[i])) {
+	    if (++i >= argc) {
+		usage(argv[0]);
+		return -1;
+	    }
+	    distingProp = argv[i];
 	} else if (strequ("-D", argv[i]) || strequ("--debug", argv[i])) {
 	    debugMode = true;
 	} else {
@@ -161,9 +170,9 @@ main(int argc, char *argv[])
 	pclose(output);
 
 	std::string clientReqStr = "load " + std::string(inet_ntoa(in)) +
-	    std::string(ldStr);
+            std::string(ldStr) + std::string(" ") + distingProp;
 	DMUCS_DEBUG((stderr, "Writing -->%s<-- to the server\n",
-		     clientReqStr.c_str()));
+                     clientReqStr.c_str()));
 
 	Sputs((char *) clientReqStr.c_str(), client_sock);
 	Sclose(client_sock);
@@ -183,5 +192,5 @@ void
 usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [-s|--server <server>] [-p|--port <port>] "
-	    "[-D|--debug]\n\n", prog);
+	    "[-t|--type <str>] [-D|--debug]\n\n", prog);
 }

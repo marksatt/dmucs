@@ -40,7 +40,7 @@ void
 DmucsHostStateAvail::unavail(DmucsHost *host)
 {
     /* Remove the CPUs from the cpus database. */
-    DmucsDb::getInstance()->delCpusFromTier(host->getTier(),
+    DmucsDb::getInstance()->delCpusFromTier(host, host->getTier(),
 					    host->getIpAddrInt());
     /* Move the host to the overloaded state: remove from availHosts_ and
        add to overloadedHosts_. */
@@ -53,7 +53,7 @@ void
 DmucsHostStateAvail::silent(DmucsHost *host)
 {
     /* Remove the CPUs from the cpus database. */
-    DmucsDb::getInstance()->delCpusFromTier(host->getTier(),
+    DmucsDb::getInstance()->delCpusFromTier(host, host->getTier(),
 					    host->getIpAddrInt());
     /* Move the host to the overloaded state: remove from availHosts_ and
        add to overloadedHosts_. */
@@ -66,7 +66,7 @@ void
 DmucsHostStateAvail::overloaded(DmucsHost *host)
 {
     /* Remove the CPUs from the cpus database. */
-    DmucsDb::getInstance()->delCpusFromTier(host->getTier(),
+    DmucsDb::getInstance()->delCpusFromTier(host, host->getTier(),
 					    host->getIpAddrInt());
     /* Move the host to the overloaded state: remove from availHosts_ and
        add to overloadedHosts_. */

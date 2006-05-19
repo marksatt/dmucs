@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string>
+#include "dmucs_dprop.h"
 
 
 enum host_status_t {
@@ -48,9 +49,16 @@ class DmucsHostState;
 class DmucsHost
 {
 private:
-    // host_status_t 	status_;
+    /* dProp_: indicates which kind of host this is.  Users can use
+       Dmucs to maintain collections of multiple types of hosts -- e.g.,
+       hosts that will only compile solaris binaries vs. those that will only
+       compile linux binaries.  Or, hosts that are reserved for certain
+       segments of users vs. hosts that are available to everyone.  We call
+       this user-defined distinction a "distinguishing property" or "dprop"
+       of a host. */
     DmucsHostState *	state_;
     struct in_addr 	ipAddr_;
+    DmucsDprop		dprop_;
     std::string		resolvedName_;
     int 		ncpus_;
     int			pindex_;
@@ -61,7 +69,7 @@ private:
     void changeState(DmucsHostState *state);
 
 public:
-    DmucsHost(const struct in_addr &ipAddr,
+    DmucsHost(const struct in_addr &ipAddr, DmucsDprop dprop,
 	      const int numCpus, const int powerIndex);
 
     void updateTier(float ldAvg1, float ldAvg5, float ldAvg10);
@@ -72,19 +80,21 @@ public:
     void overloaded();
 
     static DmucsHost *createHost(const struct in_addr &ipAddr,
-				 const std::string &hostsInfoFile);
+				  const DmucsDprop dprop,
+				  const std::string &hostsInfoFile);
 
     const int getStateAsInt() const;
     int getTier() const;
     int calcTier(float ldavg1, float ldavg5, float ldavg10, int pindex) const;
     const std::string &getName();
+    const DmucsDprop getDprop() const { return dprop_; }
 
     unsigned int getIpAddrInt() const { return ipAddr_.s_addr; }
     int getNumCpus() const { return ncpus_; }
     bool seemsDown() const;
     bool isUnavailable() const;
 
-    static std::string resolveIp2Name(unsigned int ipAddr);
+    static std::string resolveIp2Name(unsigned int ipAddr, DmucsDprop dprop);
     static const std::string &getName(std::string &resolvedName,
 				      const struct in_addr &ipAddr);
 
