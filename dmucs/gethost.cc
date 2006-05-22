@@ -242,11 +242,12 @@ main(int argc, char *argv[])
     }
 
     /* parent process -- just wait for the child */
-    (void) wait(NULL);
+    int status = 0;
+    (void) wait(&status);
 
     Sclose(client_sock);
 
-    return 0;
+    return WEXITSTATUS(status);
 }
 
 
