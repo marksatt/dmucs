@@ -19,6 +19,7 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include "dmucs.h"
 #include "dmucs_dprop.h"
 #include "dmucs_host.h"
 #include "dmucs_db.h"
@@ -104,6 +105,7 @@ DmucsHost::updateTier(float ldAvg1, float ldAvg5, float ldAvg10)
     int oldTier = getTier();
 
     if (newTier != oldTier) {
+        DMUCS_DEBUG((stderr, "oldTier %d, newTier %d\n", oldTier, newTier));
 	if (newTier == 0) {
 	    /* This host is completely overloaded: remove the CPU objects
 	       from their current tier, and move this host object to the
@@ -175,6 +177,18 @@ bool
 DmucsHost::isUnavailable() const
 {
     return (state_->asInt() == STATUS_UNAVAILABLE);
+}
+
+bool
+DmucsHost::isSilent() const
+{
+    return (state_->asInt() == STATUS_SILENT);
+}
+
+bool
+DmucsHost::isOverloaded() const
+{
+    return (state_->asInt() == STATUS_OVERLOADED);
 }
 
 

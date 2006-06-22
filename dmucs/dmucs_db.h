@@ -26,6 +26,7 @@
 #include <list>
 #include "dmucs_host.h"
 #include <pthread.h>
+#include <stdio.h>
 
 
 class DmucsDpropDb
@@ -90,7 +91,8 @@ private:
 
 public:
 
-    DmucsDpropDb(DmucsDprop dprop) : dprop_(dprop) {}
+    DmucsDpropDb(DmucsDprop dprop) :
+        dprop_(dprop), numAssignedCpus_(0), numConcurrentAssigned_(0) {}
 
     DmucsHost * getHost(const struct in_addr &ipAddr);
     bool 	haveHost(const struct in_addr &ipAddr);
@@ -279,7 +281,8 @@ public:
     }
     void getStatsFromDb(int *served, int *max, int *totalCpus) {
 	MutexMonitor m(&mutex_);
-        int t_serv = 0, t_max = 0, t_total = 0;
+        int t_serv, t_max, t_total;
+        *served = 0; *max = 0; *totalCpus = 0;
 	for (dmucs_dprop_db_iter_t itr = dbDb_.begin();
 	     itr != dbDb_.end(); ++itr) {
 	    itr->second.getStatsFromDb(&t_serv, &t_max, &t_total);

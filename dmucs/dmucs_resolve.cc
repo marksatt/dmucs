@@ -20,11 +20,13 @@
 
 #include "config.h"
 #include <string>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <netdb.h>
+#include <pthread.h>
 
 #ifndef HAVE_GETHOSTBYADDR_R
 #ifdef HAVE_GETHOSTBYADDR

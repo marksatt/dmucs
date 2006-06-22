@@ -265,7 +265,7 @@ DmucsDpropDb::serialize()
 	}
 	result << '\n';
     }
-    fprintf(stderr, "Serialize: -->%s<--\n", result.str().c_str());
+    DMUCS_DEBUG((stderr, "Serialize: -->%s<--\n", result.str().c_str()));
     return result.str();
 }
 

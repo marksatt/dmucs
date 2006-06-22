@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/time.h>
+#include <pthread.h>
 #include "COSMIC/HDR/sockets.h"
 
 
@@ -259,9 +260,9 @@ doSilentSearch(void *bogus /* not used */)
 static void *
 updateStats(void *bogus /* not used */)
 {
+    int served, max, avail;
+    char buf[32];
     while (1) {
-	int served, max, avail;
-	char buf[32];
 	DmucsDb::getInstance()->getStatsFromDb(&served, &max, &avail);
 	time_t t = time(NULL);
 	(void) ctime_r(&t, buf);

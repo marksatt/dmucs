@@ -29,7 +29,7 @@
 #         One may also start up the PortMaster (Spm -f firewallfilename).
 #         Please read the documentation on this.
 
-CC = gcc
+CC = cc
 
 OBJ = Saccept.o      Sprintf.o      Stest.o        outofmem.o     \
       Sclose.o       Sprtskt.o      Stimeoutwait.o rdcolor.o      \

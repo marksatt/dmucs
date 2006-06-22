@@ -93,6 +93,8 @@ public:
     int getNumCpus() const { return ncpus_; }
     bool seemsDown() const;
     bool isUnavailable() const;
+    bool isSilent() const;
+    bool isOverloaded() const;
 
     static std::string resolveIp2Name(unsigned int ipAddr, DmucsDprop dprop);
     static const std::string &getName(std::string &resolvedName,

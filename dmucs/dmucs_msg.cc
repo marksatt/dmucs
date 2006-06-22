@@ -162,12 +162,14 @@ DmucsLdAvgMsg::handle(Socket *sock, const char *buf)
 
     try {
 	DmucsHost *host = db->getHost(host_, dprop_);
+        host->updateTier(ldAvg1_, ldAvg5_, ldAvg10_);
 	/* If the host hasn't been explicitly made unavailable,
-	   then make it available. */
-	if (! host->isUnavailable()) {
+	   then make it available.  If the host is overloaded
+           but isn't anymore, then make it available. */
+        if (host->isSilent() ||
+            (host->isOverloaded() && host->getTier() != 0)) {
 	    host->avail();      // make sure the host is available
 	}
-	host->updateTier(ldAvg1_, ldAvg5_, ldAvg10_);
     } catch (DmucsHostNotFound &e) {
 	DmucsHost *h = DmucsHost::createHost(host_, dprop_, hostsInfoFile);
 	h->updateTier(ldAvg1_, ldAvg5_, ldAvg10_);

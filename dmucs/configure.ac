@@ -85,6 +85,8 @@ AC_CHECK_FUNC(gethostbyaddr_r, [
   AC_MSG_RESULT(no)
 ])
 
+AC_PTHREAD_FREEBSD
+
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

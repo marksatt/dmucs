@@ -202,6 +202,20 @@ struct ip_firstfour {   /* copied from <netinet/ip.h>, who knows why it isn't ge
 # endif
 #endif
 
+/* for FreeBSD */
+#ifdef __FreeBSD__
+# include <stdarg.h>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <netinet/tcp.h>
+# include <netdb.h>
+# include <stdio.h>
+# ifdef SSLNEEDTIME
+#  include <sys/time.h>
+# endif
+#endif
+
 /* for SCO Unix's cc compiler */
 #if defined(M_I386) && defined(M_SYSV)
 # include <sys/types.h>

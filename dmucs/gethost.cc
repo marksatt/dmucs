@@ -68,7 +68,7 @@ main(int argc, char *argv[])
      * o Close the client socket.
      */
 
-#ifndef __CYGWIN__
+#if (! defined (__CYGWIN__) && ! defined(__FreeBSD__))
     /* install a SIGCHLD handler */
     sigset(SIGCHLD, sigchld_handler);
 #endif
@@ -84,7 +84,7 @@ main(int argc, char *argv[])
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
     struct hostent *he;
-    char *distingProp = '\0';
+    char *distingProp = "";
 
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
@@ -211,8 +211,6 @@ main(int argc, char *argv[])
 	resolved_name += "/100";
     }
 
-    fprintf(stdout, "%s", resolved_name.c_str());
-    
     std::ostringstream tmp;
     tmp << "DISTCC_HOSTS=" << resolved_name;
     DMUCS_DEBUG((stderr, "tmp is -->%s<--\n", tmp.str().c_str()));

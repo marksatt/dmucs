@@ -33,6 +33,7 @@
 #include <sstream>
 #include "COSMIC/HDR/sockets.h"
 #include <time.h>
+#include <sys/time.h>
 #include <errno.h>
 
 
@@ -150,7 +151,7 @@ main(int argc, char *argv[])
 	    std::string word;
 	    bool found = false;
 	    while (ist >> word) {
-		if (word == "average:") {
+		if (word == "average:" || word == "averages:") {
 		    found = true;
 		    break;
 		}

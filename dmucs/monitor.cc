@@ -35,6 +35,7 @@
 #include <iostream>
 #include "COSMIC/HDR/sockets.h"
 #include <time.h>
+#include <sys/time.h>
 #include <errno.h>
 
 
@@ -211,7 +212,7 @@ parseResults(const char *resultStr)
             instr.ignore();		// eat ':'
             instr >> distProp;
             if (distProp == "''")  continue;	// empty distinguishing str
-            std::cout << distProp << " hosts:" << '\n';
+            std::cout << "*** " << distProp << " hosts:" << '\n';
             break;
         }
 	case 'H': {
@@ -224,6 +225,9 @@ parseResults(const char *resultStr)
 	    struct hostent *he = gethostbyaddr((char *)&addr, sizeof(addr),
 					       AF_INET);
 	    std::string hostname = (he != NULL) ? he->h_name : ipstr;
+            /* Remove everything from the first . onward -- so we don't see
+               the long domain name in the output. */
+            hostname.erase(hostname.find_first_of('.'));
 
 	    /*
 	     * We collect each hostname based on its state, and add it
@@ -271,8 +275,16 @@ parseResults(const char *resultStr)
 		unsigned int addr = inet_addr(ipName);
 		struct hostent *he = gethostbyaddr((char *)&addr,
                                                    sizeof(addr), AF_INET);
+                std::string hname;
+                if (he == NULL) {
+                  hname = ipName;
+                } else {
+                  hname = he->h_name;
+                  /* Remove domain name from end of hostname. */
+                  hname.erase(hname.find_first_of('.'));
+                }
 		std::ostringstream hostname;
-		hostname << ((he != NULL) ? he->h_name : ipName);
+		hostname << hname;
 		hostname << '/' << numCpus << ' ';
 		std::cout << hostname.str();
 	    } 
