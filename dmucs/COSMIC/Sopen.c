@@ -20,6 +20,7 @@
  */
 #include <stdio.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "sockets.h"
 
 /* ----------------------------------------------------------------------

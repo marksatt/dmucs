@@ -373,7 +373,7 @@ DmucsDpropDb::delFromUnavailDb(DmucsHost *host)
 /* Add "numCpus" copies of the ipaddress to the list in the given tier. */
 void
 DmucsDpropDb::addCpusToTier(int tierNum, const unsigned int ipAddr,
-			      const int numCpus)
+			    const int numCpus)
 {
     /*
      * If a tier, doesn't exist yet, create one.
@@ -406,7 +406,8 @@ DmucsDpropDb::delCpusFromTier(int tier, unsigned int ipAddr)
 {
     dmucs_avail_cpus_iter_t itr = availCpus_.find(tier);
     if (itr == availCpus_.end()) {
-	fprintf(stderr, "OOOOUCCCH: shouldn't happen\n");
+	/* This will happen when a host is going from overloaded (tier 0) to
+	   available. */
 	return 0;
     }
     int count = 0;

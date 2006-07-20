@@ -13,6 +13,7 @@
  * Date:         Aug 22, 2005
  */
 #include <stdio.h>
+#include <unistd.h>
 #include "xtdio.h"
 #include "sockets.h"
 

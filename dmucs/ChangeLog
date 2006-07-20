@@ -24,3 +24,12 @@
        problem with compilation, etc.
  
 0.5 -- Fix compilation problems with running out of hosts.
+
+0.6 -- Add support for multiple databases.  Using -t "<type>" for loadavg,
+       you can group compilation hosts according to some common
+       characteristic.  Then, to get the host with that characteristic, use
+       -t <type> for gethost as well.
+
+0.6.1 -- Fix compilation problems on Solaris with Solaris's cc
+       compiler. Fix a few other minor things I found.
+

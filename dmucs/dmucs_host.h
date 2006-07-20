@@ -35,7 +35,7 @@ enum host_status_t {
     STATUS_AVAILABLE = 1,
     STATUS_UNAVAILABLE,
     STATUS_OVERLOADED,
-    STATUS_SILENT,
+    STATUS_SILENT
 };
 
 class DmucsHostState;
