@@ -63,7 +63,7 @@ DmucsDb::getInstance()
 void
 DmucsDb::assignCpuToClient(const unsigned int clientIp,
                            const DmucsDprop dprop,
-                           const unsigned int sock)
+                           const Socket *sock)
 {
     MutexMonitor m(&mutex_);
 
@@ -74,7 +74,7 @@ DmucsDb::assignCpuToClient(const unsigned int clientIp,
 
 
 void
-DmucsDb::releaseCpu(const unsigned int sock)
+DmucsDb::releaseCpu(const Socket *sock)
 {
     /* Get the dprop so that we can release the cpu back into the
        correct sub-db in the DmucsDb. */
@@ -146,7 +146,7 @@ DmucsDpropDb::getBestAvailCpu()
 
 void
 DmucsDpropDb::assignCpuToClient(const unsigned int hostIp,
-                                const unsigned int sock)
+                                const Socket *sock)
 {
     struct in_addr t2;
     t2.s_addr = hostIp;
@@ -164,7 +164,7 @@ DmucsDpropDb::assignCpuToClient(const unsigned int hostIp,
 
 
 void
-DmucsDpropDb::releaseCpu(const unsigned int sock)
+DmucsDpropDb::releaseCpu(const Socket *sock)
 {
     DMUCS_DEBUG((stderr, "releaseCpu for socket 0x%x\n", sock));
 

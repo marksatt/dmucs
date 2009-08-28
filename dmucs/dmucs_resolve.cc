@@ -30,7 +30,8 @@
 
 #ifndef HAVE_GETHOSTBYADDR_R
 #ifdef HAVE_GETHOSTBYADDR
-static pthread_mutex_t gethost_mutex = NULL;  
+static pthread_mutex_t gethost_mutex;
+static int gethost_mutex_inited = 0;
 #endif /* HAVE_GETHOSTBYADDR */
 #endif /* !HAVE_GETHOSTBYADDR_R */
 
@@ -54,8 +55,9 @@ getHostName(std::string &resolvedName, const struct in_addr &ipAddr)
 #endif /* HAVE_GETHOSTBYADDR_R_X_ARGS */
 #elif HAVE_GETHOSTBYADDR
 	/* Buffer used to make it thread safe */
-    if (gethost_mutex == NULL) {
+    if (gethost_mutex_inited == 0) {
     	pthread_mutex_init(&gethost_mutex,0);
+        gethost_mutex_inited = 1;
     }
     pthread_mutex_lock(&gethost_mutex);
     res = gethostbyaddr((char *)&(ipAddr.s_addr), sizeof(ipAddr.s_addr),

@@ -130,7 +130,7 @@ DmucsHostReqMsg::handle(Socket *sock, const char *buf)
 
 	fprintf(stderr, "Giving out %s\n", resolved_name.c_str());
 
-	db->assignCpuToClient(cpuIpAddr, dprop_, (unsigned int) sock);
+	db->assignCpuToClient(cpuIpAddr, dprop_, sock);
 #if 0
 	fprintf(stderr, "The databases are now:\n");
 	db->dump();

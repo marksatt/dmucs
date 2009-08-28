@@ -221,13 +221,20 @@ parseResults(const char *resultStr)
 	    /* Read in ': <ip-address> <state>' */
 	    instr.ignore();		// eat ':'
 	    instr >> ipstr >> state;
+            std::string hostname = ipstr;
+            
 	    unsigned int addr = inet_addr(ipstr.c_str());
 	    struct hostent *he = gethostbyaddr((char *)&addr, sizeof(addr),
 					       AF_INET);
-	    std::string hostname = (he != NULL) ? he->h_name : ipstr;
-            /* Remove everything from the first . onward -- so we don't see
-               the long domain name in the output. */
-            hostname.erase(hostname.find_first_of('.'));
+            if (he) {
+                /* Remove everything from the first . onward -- so we
+                   don't see the long domain name in the output. */
+                hostname = he->h_name;
+                size_t pos = hostname.find_first_of('.');
+                if (pos != std::string::npos) {
+                    hostname.erase(pos);
+                }
+            }
 
 	    /*
 	     * We collect each hostname based on its state, and add it

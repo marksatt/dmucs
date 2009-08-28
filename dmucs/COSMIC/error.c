@@ -1,6 +1,7 @@
 /* error.c: this file contains an error function
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "sockets.h"
 

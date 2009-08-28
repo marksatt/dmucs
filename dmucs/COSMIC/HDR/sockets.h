@@ -89,6 +89,7 @@ struct ip_firstfour {   /* copied from <netinet/ip.h>, who knows why it isn't ge
 # include <unistd.h>
 # include <stdio.h>
 # include <stdarg.h>
+# include <stdlib.h>
 # ifdef SSLNEEDTIME
 #  include <sys/time.h>
 # endif
