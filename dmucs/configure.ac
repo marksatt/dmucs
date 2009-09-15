@@ -1,15 +1,14 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 AC_PREREQ(2.58)
-AC_INIT(dmucs, 0.5, vic.norman@gmail.com)
+AC_INIT(dmucs, 0.6.1, vic.norman@gmail.com)
+AM_INIT_AUTOMAKE([-Wall -Werror])
+
 AC_CONFIG_SRCDIR([dmucs_msg.h])
-AC_CONFIG_HEADER([config.h])
-AM_INIT_AUTOMAKE
+AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_LIBTOOL
 
 # Checks for libraries.
 AC_CHECK_LIB([nsl], [gethostbyname])
@@ -135,5 +134,5 @@ AC_DEFUN([LIB_SOCKET_NSL],
 
 LIB_SOCKET_NSL
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile COSMIC/Makefile])
 AC_OUTPUT
