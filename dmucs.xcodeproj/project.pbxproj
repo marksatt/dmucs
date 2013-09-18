@@ -175,36 +175,14 @@
 
 /* Begin PBXFileReference section */
 		308B36CC17EA307900025EAC /* dmucs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dmucs; sourceTree = BUILT_PRODUCTS_DIR; };
-		308B36DA17EA309600025EAC /* dmucs_db.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = dmucs_db.Po; sourceTree = "<group>"; };
-		308B36DB17EA309600025EAC /* dmucs_host.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = dmucs_host.Po; sourceTree = "<group>"; };
-		308B36DC17EA309600025EAC /* dmucs_host_state.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = dmucs_host_state.Po; sourceTree = "<group>"; };
-		308B36DD17EA309600025EAC /* dmucs_hosts_file.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = dmucs_hosts_file.Po; sourceTree = "<group>"; };
-		308B36DE17EA309600025EAC /* dmucs_msg.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = dmucs_msg.Po; sourceTree = "<group>"; };
-		308B36DF17EA309600025EAC /* dmucs_resolve.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = dmucs_resolve.Po; sourceTree = "<group>"; };
-		308B36E017EA309600025EAC /* gethost.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = gethost.Po; sourceTree = "<group>"; };
-		308B36E117EA309600025EAC /* loadavg.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = loadavg.Po; sourceTree = "<group>"; };
-		308B36E217EA309600025EAC /* main.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.Po; sourceTree = "<group>"; };
-		308B36E317EA309600025EAC /* monitor.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = monitor.Po; sourceTree = "<group>"; };
-		308B36E417EA309600025EAC /* remhost.Po */ = {isa = PBXFileReference; lastKnownFileType = text; path = remhost.Po; sourceTree = "<group>"; };
 		308B36E517EA309600025EAC /* aclocal.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = aclocal.m4; sourceTree = "<group>"; };
 		308B36E617EA309600025EAC /* AUTHORS */ = {isa = PBXFileReference; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
 		308B36E717EA309600025EAC /* autogen.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = autogen.sh; sourceTree = "<group>"; };
-		308B36E917EA309600025EAC /* output.0 */ = {isa = PBXFileReference; lastKnownFileType = text; path = output.0; sourceTree = "<group>"; };
-		308B36EA17EA309600025EAC /* output.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = output.1; sourceTree = "<group>"; };
-		308B36EB17EA309600025EAC /* output.5 */ = {isa = PBXFileReference; lastKnownFileType = text; path = output.5; sourceTree = "<group>"; };
-		308B36EC17EA309600025EAC /* output.6 */ = {isa = PBXFileReference; lastKnownFileType = text; path = output.6; sourceTree = "<group>"; };
-		308B36ED17EA309600025EAC /* requests */ = {isa = PBXFileReference; lastKnownFileType = text; path = requests; sourceTree = "<group>"; };
-		308B36EE17EA309600025EAC /* traces.0 */ = {isa = PBXFileReference; lastKnownFileType = text; path = traces.0; sourceTree = "<group>"; };
-		308B36EF17EA309600025EAC /* traces.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = traces.1; sourceTree = "<group>"; };
-		308B36F017EA309600025EAC /* traces.5 */ = {isa = PBXFileReference; lastKnownFileType = text; path = traces.5; sourceTree = "<group>"; };
-		308B36F117EA309600025EAC /* traces.6 */ = {isa = PBXFileReference; lastKnownFileType = text; path = traces.6; sourceTree = "<group>"; };
 		308B36F217EA309600025EAC /* autoscan.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = autoscan.log; sourceTree = "<group>"; };
 		308B36F317EA309600025EAC /* ChangeLog */ = {isa = PBXFileReference; lastKnownFileType = text; path = ChangeLog; sourceTree = "<group>"; };
 		308B36F417EA309600025EAC /* config.guess */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = config.guess; sourceTree = "<group>"; };
 		308B36F517EA309600025EAC /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		308B36F617EA309600025EAC /* config.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.h.in; sourceTree = "<group>"; };
-		308B36F717EA309600025EAC /* config.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = config.log; sourceTree = "<group>"; };
-		308B36F817EA309600025EAC /* config.status */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = config.status; sourceTree = "<group>"; };
 		308B36F917EA309600025EAC /* config.sub */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = config.sub; sourceTree = "<group>"; };
 		308B36FA17EA309600025EAC /* configure */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = configure; sourceTree = "<group>"; };
 		308B36FB17EA309700025EAC /* configure.ac */ = {isa = PBXFileReference; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
@@ -346,7 +324,6 @@
 		308B378A17EA309700025EAC /* libtool */ = {isa = PBXFileReference; lastKnownFileType = text; path = libtool; sourceTree = "<group>"; };
 		308B378B17EA309700025EAC /* loadavg.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = loadavg.cc; sourceTree = "<group>"; };
 		308B378C17EA309700025EAC /* main.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cc; sourceTree = "<group>"; };
-		308B378D17EA309700025EAC /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		308B378E17EA309700025EAC /* Makefile.am */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		308B378F17EA309700025EAC /* Makefile.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.in; sourceTree = "<group>"; };
 		308B379017EA309700025EAC /* missing */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = missing; sourceTree = "<group>"; };
@@ -358,7 +335,6 @@
 		308B379717EA309700025EAC /* disable-host */ = {isa = PBXFileReference; lastKnownFileType = text; path = "disable-host"; sourceTree = "<group>"; };
 		308B379817EA309700025EAC /* enable-host */ = {isa = PBXFileReference; lastKnownFileType = text; path = "enable-host"; sourceTree = "<group>"; };
 		308B379917EA309700025EAC /* watch-ssaver */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = "watch-ssaver"; sourceTree = "<group>"; };
-		308B379B17EA309700025EAC /* stamp-h1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = "stamp-h1"; sourceTree = "<group>"; };
 		308B379C17EA309700025EAC /* test.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test.cc; sourceTree = "<group>"; };
 		308B37A817EA3AD200025EAC /* libcosmic.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libcosmic.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		308B37D417EA3CAC00025EAC /* gethost */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = gethost; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -442,18 +418,14 @@
 		308B36D817EA309600025EAC /* dmucs */ = {
 			isa = PBXGroup;
 			children = (
-				308B36D917EA309600025EAC /* .deps */,
 				308B36E517EA309600025EAC /* aclocal.m4 */,
 				308B36E617EA309600025EAC /* AUTHORS */,
 				308B36E717EA309600025EAC /* autogen.sh */,
-				308B36E817EA309600025EAC /* autom4te.cache */,
 				308B36F217EA309600025EAC /* autoscan.log */,
 				308B36F317EA309600025EAC /* ChangeLog */,
 				308B36F417EA309600025EAC /* config.guess */,
 				308B36F517EA309600025EAC /* config.h */,
 				308B36F617EA309600025EAC /* config.h.in */,
-				308B36F717EA309600025EAC /* config.log */,
-				308B36F817EA309600025EAC /* config.status */,
 				308B36F917EA309600025EAC /* config.sub */,
 				308B36FA17EA309600025EAC /* configure */,
 				308B36FB17EA309700025EAC /* configure.ac */,
@@ -483,7 +455,6 @@
 				308B378A17EA309700025EAC /* libtool */,
 				308B378B17EA309700025EAC /* loadavg.cc */,
 				308B378C17EA309700025EAC /* main.cc */,
-				308B378D17EA309700025EAC /* Makefile */,
 				308B378E17EA309700025EAC /* Makefile.am */,
 				308B378F17EA309700025EAC /* Makefile.in */,
 				308B379017EA309700025EAC /* missing */,
@@ -494,44 +465,9 @@
 				308B379517EA309700025EAC /* remhost.cc */,
 				308B379617EA309700025EAC /* scripts */,
 				308B379A17EA309700025EAC /* src */,
-				308B379B17EA309700025EAC /* stamp-h1 */,
 				308B379C17EA309700025EAC /* test.cc */,
 			);
 			path = dmucs;
-			sourceTree = "<group>";
-		};
-		308B36D917EA309600025EAC /* .deps */ = {
-			isa = PBXGroup;
-			children = (
-				308B36DA17EA309600025EAC /* dmucs_db.Po */,
-				308B36DB17EA309600025EAC /* dmucs_host.Po */,
-				308B36DC17EA309600025EAC /* dmucs_host_state.Po */,
-				308B36DD17EA309600025EAC /* dmucs_hosts_file.Po */,
-				308B36DE17EA309600025EAC /* dmucs_msg.Po */,
-				308B36DF17EA309600025EAC /* dmucs_resolve.Po */,
-				308B36E017EA309600025EAC /* gethost.Po */,
-				308B36E117EA309600025EAC /* loadavg.Po */,
-				308B36E217EA309600025EAC /* main.Po */,
-				308B36E317EA309600025EAC /* monitor.Po */,
-				308B36E417EA309600025EAC /* remhost.Po */,
-			);
-			path = .deps;
-			sourceTree = "<group>";
-		};
-		308B36E817EA309600025EAC /* autom4te.cache */ = {
-			isa = PBXGroup;
-			children = (
-				308B36E917EA309600025EAC /* output.0 */,
-				308B36EA17EA309600025EAC /* output.1 */,
-				308B36EB17EA309600025EAC /* output.5 */,
-				308B36EC17EA309600025EAC /* output.6 */,
-				308B36ED17EA309600025EAC /* requests */,
-				308B36EE17EA309600025EAC /* traces.0 */,
-				308B36EF17EA309600025EAC /* traces.1 */,
-				308B36F017EA309600025EAC /* traces.5 */,
-				308B36F117EA309600025EAC /* traces.6 */,
-			);
-			path = autom4te.cache;
 			sourceTree = "<group>";
 		};
 		308B36FE17EA309700025EAC /* COSMIC */ = {
