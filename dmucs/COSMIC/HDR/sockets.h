@@ -76,9 +76,6 @@ struct ip_firstfour {   /* copied from <netinet/ip.h>, who knows why it isn't ge
 
 /* for Apple's MAC OS-X - thanks to Paul Bourke */
 #ifdef __APPLE__
-# define macosx
-#endif
-#ifdef macosx
 # include <sys/types.h>
 # include <sys/select.h>
 # include <sys/socket.h>
@@ -438,7 +435,7 @@ SKTEVENT Srmsrvr(char *);                                                       
 int Sscanf(Socket *,char *,...);                                                                                    /* Sscanf.c        */
 int Stest(Socket *);                                                                                                /* Stest.c         */
 int Stimeoutwait(Socket *,long,long);                                                                               /* Stimeoutwait.c  */
-int Svprintf( Socket *, char *, void *);                                                                            /* Svprintf.c      */
+int Svprintf( Socket *, char *, ...);                                                                            /* Svprintf.c      */
 int Swait(Socket *);                                                                                                /* Swait.c         */
 int Swrite( Socket *,  void *,  int);                                                                               /* Swrite.c        */
 #else

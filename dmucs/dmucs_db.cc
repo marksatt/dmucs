@@ -132,7 +132,7 @@ DmucsDpropDb::getBestAvailCpu()
 	    continue;
 	}
 	srandom((unsigned int) time(NULL));
-	int n = random() % itr->second.size();
+	unsigned long n = random() % itr->second.size();
 	dmucs_cpus_iter_t itr2 = itr->second.begin();
 	for (int i = 0; i < n; ++itr2, i++) ;
 	result = *itr2;	// get the IP address of the nth element in the list
@@ -157,7 +157,7 @@ DmucsDpropDb::assignCpuToClient(const unsigned int hostIp,
     numAssignedCpus_++;
 
     int t;
-    if ((t = assignedCpus_.size()) > numConcurrentAssigned_) {
+    if ((t = (int)assignedCpus_.size()) > numConcurrentAssigned_) {
 	numConcurrentAssigned_ = t;
     }
 }
@@ -166,11 +166,11 @@ DmucsDpropDb::assignCpuToClient(const unsigned int hostIp,
 void
 DmucsDpropDb::releaseCpu(const Socket *sock)
 {
-    DMUCS_DEBUG((stderr, "releaseCpu for socket 0x%x\n", sock));
+    DMUCS_DEBUG((stderr, "releaseCpu for socket %p\n", sock));
 
     dmucs_assigned_cpus_iter_t itr = assignedCpus_.find(sock);
     if (itr == assignedCpus_.end()) {
-	DMUCS_DEBUG((stderr, "No cpu found in assignedCpus for sock 0x%x\n",
+	DMUCS_DEBUG((stderr, "No cpu found in assignedCpus for sock %p\n",
 		     sock));
 	return;
     }
@@ -471,7 +471,7 @@ DmucsDpropDb::dump()
 	 itr != assignedCpus_.end(); ++itr) {
 	struct in_addr t;
 	t.s_addr = itr->second;
-	fprintf(stderr, "%s assigned to 0x%x", inet_ntoa(t), itr->first);
+	fprintf(stderr, "%s assigned to %p", inet_ntoa(t), itr->first);
     }
     fprintf(stderr, "\n");
 

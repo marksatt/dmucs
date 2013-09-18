@@ -38,7 +38,7 @@ DmucsMsg *
 DmucsMsg::parseMsg(Socket *sock, const char *buffer)
 {
     struct in_addr clientIp;
-    clientIp.s_addr = Speeraddr(sock);
+    clientIp.s_addr = (in_addr_t)Speeraddr(sock);
     char dpropstr[DPROP_MAX_STRLEN + 1];
     dpropstr[0] = '\0';		// empty string
 
@@ -97,7 +97,7 @@ DmucsMsg::parseMsg(Socket *sock, const char *buffer)
 		machname, state, dpropstr);
 	struct in_addr host;
 	host.s_addr = inet_addr(machname);
-	host_status_t status;
+	host_status_t status = STATUS_UNKNOWN;
 	if (strncmp(state, "up", 2) == 0) {
 	    status = STATUS_AVAILABLE;
 	} else if (strncmp(state, "down", 4) == 0) {

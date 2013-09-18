@@ -52,12 +52,14 @@ protected:
 
     DmucsMsg(struct in_addr clientIp, DmucsDprop dprop) :
 	clientIp_(clientIp), dprop_(dprop) {}
-
+	
 public:
     /* Factory Method: parseMsg */
     static DmucsMsg *parseMsg(Socket *sock, const char *buf);
 
     virtual void handle(Socket *sock, const char *buf) = 0;
+	
+	virtual ~DmucsMsg(){}
 };
 
 
@@ -74,6 +76,7 @@ public:
 		   host_status_t status, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop), 
 	host_(host), status_(status), numCpus_(1), powerIndex_(1) {}
+	virtual ~DmucsStatusMsg(){}
     void handle(Socket *sock, const char *buf);
 };
 
@@ -90,6 +93,7 @@ public:
 		  float ldavg10, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop), 
 	host_(host), ldAvg1_(ldavg1), ldAvg5_(ldavg5), ldAvg10_(ldavg10) {}
+	virtual ~DmucsLdAvgMsg(){}
     void handle(Socket *sock, const char *buf);
 };
 
@@ -99,6 +103,7 @@ class DmucsHostReqMsg : public DmucsMsg
 public:
     DmucsHostReqMsg(struct in_addr clientIp, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop) {}
+	virtual ~DmucsHostReqMsg(){}
     void handle(Socket *sock, const char *buf);
 };
 
@@ -108,6 +113,7 @@ class DmucsMonitorReqMsg : public DmucsMsg
 public:
     DmucsMonitorReqMsg(struct in_addr clientIp, DmucsDprop dprop) :
 	DmucsMsg(clientIp, dprop) {};
+	virtual ~DmucsMonitorReqMsg(){}
     void handle(Socket *sock, const char *buf);
 };
 

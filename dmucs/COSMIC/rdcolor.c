@@ -12,7 +12,9 @@
  *	     \t     =>      tab character
  *	     \A - \Z=>      Associated control characters
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include "xtdio.h"
 

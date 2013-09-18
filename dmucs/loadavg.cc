@@ -143,7 +143,6 @@ main(int argc, char *argv[])
 	if (fgets(buf, 1024, output) == NULL) {
 	    strcpy(ldStr," 0.0 0.0 0.0");
 	} else {
-	    char junk1[8];
 	    float ldAvg1 = 0.0, ldAvg5 = 0.0, ldAvg10 = 0.0;
 
 	    std::istringstream ist(buf);

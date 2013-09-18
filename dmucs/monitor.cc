@@ -121,7 +121,7 @@ main(int argc, char *argv[])
 	    continue;
 	}
 
-	Sputs("monitor", client_sock);
+	Sputs((char*)"monitor", client_sock);
 	resultStr[0] = '\0';
 	if (Sgets(resultStr, RESULT_MAX_SIZE, client_sock) == NULL) {
 	    fprintf(stderr, "Got error from reading socket.\n");

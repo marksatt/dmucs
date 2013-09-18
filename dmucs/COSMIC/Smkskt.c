@@ -12,7 +12,9 @@
  *               of this software.
  * Date:         Aug 22, 2005
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "sockets.h"
 
 /* --------------------------------------------------------------------- */

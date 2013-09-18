@@ -12,7 +12,9 @@
  *               of this software.
  * Date:         Aug 22, 2005
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "sockets.h"
 
 /* ---------------------------------------------------------------------
@@ -52,7 +54,7 @@ else                 buf= buf1;
 if(!skt) strcpy(buf,"null socket");
 
 /* attempt to get information from peer */
-else if(getpeername(skt->skt,(struct sockaddr *) &sktname,&namelen) == -1) {
+else if(getpeername(skt->skt,(struct sockaddr *) &sktname,(socklen_t*)&namelen) == -1) {
 	strcpy(buf,"unknown");
 	}
 else {

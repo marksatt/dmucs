@@ -126,7 +126,6 @@ main(int argc, char *argv[])
     struct sockaddr sck;
     socklen_t s = sizeof(sck);
     getsockname(client_sock->skt, &sck, &s);
-    struct sockaddr_in *sin = (struct sockaddr_in *) &sck;
 
     /* If the name of the program is "addhost", then send "up" to the
        dmucs server.  Otherwise, send "down". */

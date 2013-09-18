@@ -3,7 +3,9 @@
  *   The environment string can have ";" as separators for multiple
  *   path searching.  Returns a NULL pointer if unsuccessful.
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include "xtdio.h"
 

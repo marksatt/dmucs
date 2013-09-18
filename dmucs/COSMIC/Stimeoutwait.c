@@ -58,7 +58,7 @@ FD_ZERO(&emask);
  * will block (sleep) until something arrives
  */
 timeout.tv_sec = seconds;
-timeout.tv_usec= useconds;
+timeout.tv_usec= (int)useconds;
 
 #ifdef SSLNOPEEK
 
@@ -92,7 +92,7 @@ return 1;
 #else	/* #ifdef SSLNOPEEK ... #else ... #endif */
 
 if(FD_ISSET(skt->skt,&rmask)) {
-	ret= recv(skt->skt,buf,PM_BIGBUF-1,MSG_PEEK);
+	ret= (int)recv(skt->skt,buf,PM_BIGBUF-1,MSG_PEEK);
 	if(result == 1 && ret == 0) ret= EOF;
 	return ret;
 	}

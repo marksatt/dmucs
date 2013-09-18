@@ -12,7 +12,9 @@
  *               of this software.
  * Date:         Aug 22, 2005
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "sockets.h"
 
 /* --------------------------------------------------------------------- */
@@ -32,7 +34,7 @@
 int Svprintf(
   Socket *skt,
   char   *fmt,
-  void   *args)
+  ...)
 #else
 int Svprintf(skt,fmt,args)
 Socket *skt;
@@ -51,10 +53,15 @@ if(!skt) {
 
 #ifdef AS400
 ret= vsprintf(buf,fmt,__va_list args);
+#elif __APPLE__
+	va_list va;
+	va_start(va, fmt);
+	ret = vsprintf(buf, fmt, va);
+	va_end(va);
 #else
 ret= vsprintf(buf,fmt,(char *) args);
 #endif
-Swrite(skt,buf,strlen(buf)+1);	/* send the null byte, too */
+Swrite(skt,buf,(int)strlen(buf)+1);	/* send the null byte, too */
 
 return ret;
 }

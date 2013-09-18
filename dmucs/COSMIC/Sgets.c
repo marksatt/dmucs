@@ -16,7 +16,9 @@
  *               of this software.
  * Date:         Aug 22, 2005
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "sockets.h"
 
 /* ---------------------------------------------------------------------------
@@ -55,7 +57,7 @@ char *Sgets(buf, maxbuf, skt)
 #endif
 {
     int   buflen;
-    int   mesglen;
+    long   mesglen;
     char *b  = NULL;
 #ifndef SSLNOPEEK
     char *nb = NULL;
@@ -101,7 +103,7 @@ char *Sgets(buf, maxbuf, skt)
 
 	    if (nb < b + mesglen) {	/* null byte inside peeked-at message	*/
 		mesglen = nb - b + 1;	/* read up to and including null byte	*/
-		if (Sreadbytes(skt, b, mesglen) <= 0) {
+		if (Sreadbytes(skt, b, (int)mesglen) <= 0) {
 		    return buf;
 		}
 		break;
@@ -114,7 +116,7 @@ char *Sgets(buf, maxbuf, skt)
 		break;
 	    }
 	    else {
-		if (Sreadbytes(skt, b, mesglen) <= 0) {	/* partial read	*/
+		if (Sreadbytes(skt, b, (int)mesglen) <= 0) {	/* partial read	*/
 		    return buf;
 		}
 	    }

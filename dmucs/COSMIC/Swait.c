@@ -77,7 +77,7 @@ return 1;
 
 /* wait if message available from socket, return qty bytes avail */
 if(FD_ISSET(skt->skt,&rmask)) {
-	ret= recv(skt->skt,buf,PM_BIGBUF-1,MSG_PEEK);
+	ret= (int)recv(skt->skt,buf,PM_BIGBUF-1,MSG_PEEK);
 	if(result == 1 && ret == 0) ret= EOF;
 	return ret;
 	}

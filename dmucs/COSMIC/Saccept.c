@@ -57,7 +57,7 @@ Socket *Saccept(Socket *skt)
 
     /* accept a connection */
     addrlen       = sizeof (addr);
-    acceptskt->skt= accept(skt->skt, &addr, &addrlen);
+    acceptskt->skt= accept(skt->skt, &addr, (socklen_t*)&addrlen);
     if (acceptskt->skt < 0) {	/* failure to accept */
 	freeSocket(acceptskt);
 	return (Socket *) NULL;

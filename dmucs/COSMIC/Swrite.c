@@ -49,7 +49,7 @@ int     buflen;
 
     /* write buflen bytes, no matter the wait */
     for (cnt = 0; cnt < buflen; cnt += wcnt) {
-	wcnt = send(skt->skt, (void *) (((char *) buf) + cnt),
+	wcnt = (int)send(skt->skt, (void *) (((char *) buf) + cnt),
 		    (unsigned) (buflen - cnt), 0);
 	if (wcnt < 0) {
 	    return cnt;

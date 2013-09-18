@@ -83,8 +83,7 @@ main(int argc, char *argv[])
     std::ostringstream serverName;
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
-    struct hostent *he;
-    char *distingProp = "";
+    char const*distingProp = "";
 
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
@@ -153,7 +152,6 @@ main(int argc, char *argv[])
 	struct sockaddr sck;
 	socklen_t s = sizeof(sck);
 	getsockname(client_sock->skt, &sck, &s);
-	struct sockaddr_in *sin = (struct sockaddr_in *) &sck;
 
 	std::ostringstream clientReqStr;
 	clientReqStr << "host " << inet_ntoa(in) << " " << distingProp;

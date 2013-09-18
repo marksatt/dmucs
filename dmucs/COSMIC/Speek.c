@@ -92,7 +92,7 @@ return 1;
 
 /* test if message available from socket, return qty bytes avail */
 if(FD_ISSET(skt->skt,&rmask)) {
-	buflen= recv(skt->skt,buf,buflen,MSG_PEEK);
+	buflen= (int)recv(skt->skt,buf,buflen,MSG_PEEK);
 	if(result == 1 && buflen == 0) buflen= EOF;
 	return buflen;
 	}

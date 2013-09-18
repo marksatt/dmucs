@@ -153,7 +153,7 @@ long useconds;			/* time in micro-seconds	*/
 
     else { /* set up specified timeout */
 	timewait.tv_sec = seconds;
-	timewait.tv_usec= useconds;
+	timewait.tv_usec= (int)useconds;
 	timeptr         = &timewait;
     }
 

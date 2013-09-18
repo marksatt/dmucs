@@ -18,7 +18,9 @@
  *    static Socket *Sopen_server(char *sktname)
  *    static Socket *Sopen_client( char *hostname, char *sktname, int blocking)
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 #include "sockets.h"
@@ -256,7 +258,7 @@ char *sktname;
    * such as the port number assigned to this socket
    */
   length = sizeof(sin);
-  if(getsockname(skt->skt,(struct sockaddr *) &sin,&length)) {
+  if(getsockname(skt->skt,(struct sockaddr *) &sin,(socklen_t*)&length)) {
     freeSocket(skt);
     return (Socket *) NULL;
   }

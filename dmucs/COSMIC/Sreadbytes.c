@@ -48,7 +48,7 @@ if(!skt) {
 
 /* get buflen bytes, no matter the wait */
 for(cnt= 0; cnt < buflen; cnt+= rcnt) {
-	rcnt= recv(skt->skt,(void *) (((char *)buf)+cnt),(unsigned) (buflen-cnt),0);
+	rcnt= (int)recv(skt->skt,(void *) (((char *)buf)+cnt),(unsigned) (buflen-cnt),0);
 	if(rcnt < 0) break;
 	}
 

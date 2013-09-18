@@ -12,7 +12,9 @@
  *               of this software.
  * Date:         Aug 22, 2005
  */
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "sockets.h"
 
 /* Sprintf: */
@@ -51,7 +53,7 @@ fmt = va_arg(args,char *);
 fflush(stdout);
 
 ret= vsprintf(buf,fmt,args);
-Swrite(skt,buf,strlen(buf)+1);	/* send the null byte, too */
+Swrite(skt,buf,(int)strlen(buf)+1);	/* send the null byte, too */
 va_end(args);
 
 return ret;

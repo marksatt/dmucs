@@ -81,7 +81,7 @@ if(FD_ISSET(skt->skt,&rmask)) {
 /* test if message available from socket, return qty bytes avail */
 
 if(FD_ISSET(skt->skt,&rmask)) {
-	ret= recv(skt->skt,buf,PM_BIGBUF-1,MSG_PEEK);
+	ret= (int)recv(skt->skt,buf,PM_BIGBUF-1,MSG_PEEK);
 
 	/* return error indication when select returned a result of 1
 	 * (indicating that *something* is on the socket)

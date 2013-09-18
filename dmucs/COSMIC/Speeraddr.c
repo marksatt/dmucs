@@ -44,7 +44,7 @@ static int             namelen = sizeof(struct sockaddr);
 
 if(!skt) ret= 0;
 
-else if(getpeername(skt->skt,&sktname,&namelen) == -1) {
+else if(getpeername(skt->skt,&sktname,(socklen_t*)&namelen) == -1) {
 	ret= 0;
 	}
 

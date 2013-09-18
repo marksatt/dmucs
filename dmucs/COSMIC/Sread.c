@@ -40,7 +40,7 @@ if(!skt) {
 	}
 
 /* read bytes from Socket */
-cnt  = recv(skt->skt,(void *) buf,(unsigned) buflen,0);
+cnt  = (int)recv(skt->skt,(void *) buf,(unsigned) buflen,0);
 
 if(cnt > 0) {	/* "cnt" bytes received		*/
 	return cnt;

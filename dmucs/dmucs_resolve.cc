@@ -38,7 +38,6 @@ static int gethost_mutex_inited = 0;
 const std::string &
 getHostName(std::string &resolvedName, const struct in_addr &ipAddr)
 {
-    int myerrno;
     int res8 = 0;
     struct hostent he, *res = 0;
     char buffer[128];
