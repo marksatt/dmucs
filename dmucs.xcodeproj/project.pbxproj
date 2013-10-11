@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		302882F61803F70B00BB141E /* remhost.cc in Sources */ = {isa = PBXBuildFile; fileRef = 308B379517EA309700025EAC /* remhost.cc */; };
+		302882F81803F70B00BB141E /* libcosmic.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 308B37A817EA3AD200025EAC /* libcosmic.a */; };
 		308B379D17EA319C00025EAC /* dmucs_resolve.cc in Sources */ = {isa = PBXBuildFile; fileRef = 308B378517EA309700025EAC /* dmucs_resolve.cc */; };
 		308B379E17EA31A800025EAC /* dmucs_db.cc in Sources */ = {isa = PBXBuildFile; fileRef = 308B377817EA309700025EAC /* dmucs_db.cc */; };
 		308B379F17EA31AD00025EAC /* dmucs_host.cc in Sources */ = {isa = PBXBuildFile; fileRef = 308B377B17EA309700025EAC /* dmucs_host.cc */; };
@@ -60,6 +62,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		302882F41803F70B00BB141E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 308B36C417EA307900025EAC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 308B37A717EA3AD200025EAC;
+			remoteInfo = cosmic;
+		};
 		308B37CD17EA3B1F00025EAC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 308B36C417EA307900025EAC /* Project object */;
@@ -126,6 +135,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		302882F91803F70B00BB141E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		308B36CA17EA307900025EAC /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -174,6 +192,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		302882FD1803F70B00BB141E /* addhost */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = addhost; sourceTree = BUILT_PRODUCTS_DIR; };
 		308B36CC17EA307900025EAC /* dmucs */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dmucs; sourceTree = BUILT_PRODUCTS_DIR; };
 		308B36E517EA309600025EAC /* aclocal.m4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = aclocal.m4; sourceTree = "<group>"; };
 		308B36E617EA309600025EAC /* AUTHORS */ = {isa = PBXFileReference; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
@@ -344,6 +363,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		302882F71803F70B00BB141E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				302882F81803F70B00BB141E /* libcosmic.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		308B36C917EA307900025EAC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -411,6 +438,7 @@
 				308B37E817EA3D1700025EAC /* loadavg */,
 				308B37F917EA3D4500025EAC /* monitor */,
 				308B380A17EA3D7800025EAC /* remhost */,
+				302882FD1803F70B00BB141E /* addhost */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -668,6 +696,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		302882F21803F70B00BB141E /* addhost */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 302882FA1803F70B00BB141E /* Build configuration list for PBXNativeTarget "addhost" */;
+			buildPhases = (
+				302882F51803F70B00BB141E /* Sources */,
+				302882F71803F70B00BB141E /* Frameworks */,
+				302882F91803F70B00BB141E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				302882F31803F70B00BB141E /* PBXTargetDependency */,
+			);
+			name = addhost;
+			productName = remhost;
+			productReference = 302882FD1803F70B00BB141E /* addhost */;
+			productType = "com.apple.product-type.tool";
+		};
 		308B36CB17EA307900025EAC /* dmucs */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 308B36D517EA307900025EAC /* Build configuration list for PBXNativeTarget "dmucs" */;
@@ -806,11 +852,20 @@
 				308B37E717EA3D1700025EAC /* loadavg */,
 				308B37F817EA3D4500025EAC /* monitor */,
 				308B380917EA3D7800025EAC /* remhost */,
+				302882F21803F70B00BB141E /* addhost */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		302882F51803F70B00BB141E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				302882F61803F70B00BB141E /* remhost.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		308B36C817EA307900025EAC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -901,6 +956,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		302882F31803F70B00BB141E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 308B37A717EA3AD200025EAC /* cosmic */;
+			targetProxy = 302882F41803F70B00BB141E /* PBXContainerItemProxy */;
+		};
 		308B37CE17EA3B1F00025EAC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 308B37A717EA3AD200025EAC /* cosmic */;
@@ -949,6 +1009,20 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		302882FB1803F70B00BB141E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		302882FC1803F70B00BB141E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		308B36D317EA307900025EAC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1097,6 +1171,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		302882FA1803F70B00BB141E /* Build configuration list for PBXNativeTarget "addhost" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				302882FB1803F70B00BB141E /* Debug */,
+				302882FC1803F70B00BB141E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		308B36C717EA307900025EAC /* Build configuration list for PBXProject "dmucs" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
