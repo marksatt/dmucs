@@ -28,7 +28,7 @@
 const std::string HOSTS_INFO_FILE = std::string(PKGDATADIR) + \
 	std::string("/") + std::string("hosts-info");
 #else
-const std::string HOSTS_INFO_FILE = "hosts-info";
+const std::string HOSTS_INFO_FILE = std::string(getenv("HOME")) + std::string("/.dmucs/hosts-info");
 #endif
 
 
