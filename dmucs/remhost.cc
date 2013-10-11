@@ -44,13 +44,10 @@ main(int argc, char *argv[])
 {
     /*
      * o Open a client socket to the server ip/port.
-     * o Send my IP address in a 'remove host' or 'add host' request, depending
+     * o Send a supplied or my IP address in a 'remove host' or 'add host' request, depending
      *   on the name of the executable.
      * o Close the client socket.
      */
-
-    // TODO: need to take optional ip address as argument -- to remove / add
-    // host on a remote machine.
 
     /*
      * Process command-line arguments:
@@ -58,11 +55,13 @@ main(int argc, char *argv[])
      * -s <server>, --server <server>: the name of the server machine.
      * -p <port>, --port <port>: the port number to send to (default: 6714).
      * -D, --debug: debug mode (default: off)
+     * -ip <address>: The machine IP to add or remove from the server (default: localhost's IP).
      */
     std::ostringstream serverName;
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
     char *distingProp = '\0';
+	char * suppliedIP = NULL;
 
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
@@ -90,6 +89,14 @@ main(int argc, char *argv[])
 	} else if (strequ("-D", argv[nextarg]) ||
 		   strequ("--debug", argv[nextarg])) {
 	    debugMode = true;
+	}
+	else if(strequ("-ip", argv[nextarg]))
+	{
+		if (++nextarg >= argc) {
+			usage(argv[0]);
+			return -1;
+	    }
+		suppliedIP = argv[nextarg];
 	} else {
 	    /* We are looking at the command to run, supposedly. */
 	    break;
@@ -132,8 +139,9 @@ main(int argc, char *argv[])
     const char *op = (strstr(argv[0], "addhost") != NULL) ? "up" : "down";
 
     std::ostringstream clientReqStr;
-    clientReqStr << "status " << inet_ntoa(in) << " " << op << " "
-                 << distingProp;
+	char const* ip = suppliedIP ? suppliedIP : inet_ntoa(in);
+    clientReqStr << "status " << ip << " " << op << " "
+	<< (distingProp ? distingProp : "");
     DMUCS_DEBUG((stderr, "Writing -->%s<-- to the server\n",
 		 clientReqStr.str().c_str()));
 
@@ -150,5 +158,5 @@ void
 usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [-s|--server <server>] [-p|--port <port>] "
-	    "[-t|--type <str>] [-D|--debug] <command> [args] \n\n", prog);
+	    "[-t|--type <str>] [-D|--debug] [-ip <address>] <command> [args] \n\n", prog);
 }
