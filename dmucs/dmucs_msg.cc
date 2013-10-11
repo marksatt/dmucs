@@ -197,7 +197,10 @@ DmucsStatusMsg::handle(Socket *sock, const char *buf)
 	    DmucsHost::createHost(host_, dprop_, hostsInfoFile);
 	}
     } else {    // status is unavailable.
-	db->getHost(host_, dprop_)->unavail();
+		try {
+			db->getHost(host_, dprop_)->unavail();
+		} catch (...) {
+			}
     }
     removeFd(sock);
 }
