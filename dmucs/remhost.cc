@@ -60,8 +60,9 @@ main(int argc, char *argv[])
     std::ostringstream serverName;
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
-    char *distingProp = '\0';
+    char * distingProp = "";
 	char * suppliedIP = NULL;
+	char * suppliedHost = NULL;
 
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
@@ -97,6 +98,14 @@ main(int argc, char *argv[])
 			return -1;
 	    }
 		suppliedIP = argv[nextarg];
+	}
+	else if(strequ("--host", argv[nextarg]))
+	{
+		if (++nextarg >= argc) {
+			usage(argv[0]);
+			return -1;
+	    }
+		suppliedHost = argv[nextarg];
 	} else {
 	    /* We are looking at the command to run, supposedly. */
 	    break;
@@ -120,7 +129,7 @@ main(int argc, char *argv[])
 	Sclose(client_sock);
 	return -1;
     }
-    struct hostent *he = gethostbyname(hostname);
+    struct hostent *he = gethostbyname(suppliedHost ? suppliedHost : hostname);
     if (he == NULL) {
 	fprintf(stderr, "Could not get my hostname\n");
 	Sclose(client_sock);
@@ -158,5 +167,5 @@ void
 usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [-s|--server <server>] [-p|--port <port>] "
-	    "[-t|--type <str>] [-D|--debug] [-ip <address>] <command> [args] \n\n", prog);
+	    "[-t|--type <str>] [-D|--debug] [-ip <address>] [--host <hostname>] <command> [args] \n\n", prog);
 }
