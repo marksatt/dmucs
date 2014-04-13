@@ -210,7 +210,7 @@ main(int argc, char *argv[])
     }
 
     std::ostringstream tmp;
-    tmp << "DISTCC_HOSTS=" << resolved_name;
+    tmp << "DISTCC_HOSTS=" << resolved_name << ",cpp,lzo";
     DMUCS_DEBUG((stderr, "tmp is -->%s<--\n", tmp.str().c_str()));
     if (putenv((char *) tmp.str().c_str()) != 0) {
 	fprintf(stderr, "Error putting DISTCC_HOSTS in the environment\n");
