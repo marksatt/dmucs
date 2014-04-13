@@ -37,6 +37,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <errno.h>
+#if __APPLE__
+#include <Foundation/Foundation.h>
+#include <Foundation/NSDistributedNotificationCenter.h>
+#endif
 
 
 extern char **environ;
@@ -240,6 +244,14 @@ parseResults(const char *resultStr)
 	     * We collect each hostname based on its state, and add it
 	     * to an output string.
 	     */
+		
+#if __APPLE__
+		NSDistributedNotificationCenter* Notifier = [NSDistributedNotificationCenter defaultCenter];
+		NSString* HostName = [NSString stringWithUTF8String: hostname.c_str()];
+		NSNumber* StatusNum = [NSNumber numberWithInt:(int)state];
+		NSDictionary* Info = [NSDictionary dictionaryWithObjectsAndKeys:HostName, @"HostName", StatusNum, @"Status", nil];
+		[Notifier postNotificationName:@"dmucsMonitorHostStatus" object:@"DMUCS" userInfo:Info options:(NSUInteger)NSNotificationPostToAllSessions];
+#endif
 
 	    std::ostringstream *ostr;
 	    switch (state) {
@@ -288,8 +300,22 @@ parseResults(const char *resultStr)
                 } else {
                   hname = he->h_name;
                   /* Remove domain name from end of hostname. */
-                  hname.erase(hname.find_first_of('.'));
+				  size_t index = hname.find_first_of('.');
+				  if(index != std::string::npos)
+				  {
+				    hname.erase();
+				  }
                 }
+			
+#if __APPLE__
+		NSDistributedNotificationCenter* Notifier = [NSDistributedNotificationCenter defaultCenter];
+		NSString* HostName = [NSString stringWithUTF8String: hname.c_str()];
+		NSNumber* TierNum = [NSNumber numberWithInt:(int)tierNum];
+		NSNumber* CpusNum = [NSNumber numberWithInt:(int)numCpus];
+		NSDictionary* Info = [NSDictionary dictionaryWithObjectsAndKeys:HostName, @"HostName", TierNum, @"Tier", CpusNum, @"Cpus", nil];
+		[Notifier postNotificationName:@"dmucsMonitorHostTier" object:@"DMUCS" userInfo:Info options:(NSUInteger)NSNotificationPostToAllSessions];
+#endif
+			
 		std::ostringstream hostname;
 		hostname << hname;
 		hostname << '/' << numCpus << ' ';
