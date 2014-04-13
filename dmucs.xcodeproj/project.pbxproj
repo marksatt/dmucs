@@ -347,7 +347,7 @@
 		308B378F17EA309700025EAC /* Makefile.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.in; sourceTree = "<group>"; };
 		308B379017EA309700025EAC /* missing */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = missing; sourceTree = "<group>"; };
 		308B379117EA309700025EAC /* mkinstalldirs */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = mkinstalldirs; sourceTree = "<group>"; };
-		308B379217EA309700025EAC /* monitor.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = monitor.cc; sourceTree = "<group>"; };
+		308B379217EA309700025EAC /* monitor.cc */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = monitor.cc; sourceTree = "<group>"; };
 		308B379317EA309700025EAC /* NEWS */ = {isa = PBXFileReference; lastKnownFileType = text; path = NEWS; sourceTree = "<group>"; };
 		308B379417EA309700025EAC /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		308B379517EA309700025EAC /* remhost.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = remhost.cc; sourceTree = "<group>"; };
