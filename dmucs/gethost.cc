@@ -80,12 +80,14 @@ main(int argc, char *argv[])
      * -s <server>, --server <server>: the name of the server machine.
      * -p <port>, --port <port>: the port number to listen on (default: 6714).
      * -D, --debug: debug mode (default: off)
+     * -w, --wait: Time to wait in seconds for a host before falling back to localhost (default: 0)
      */
     std::ostringstream serverName;
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
     char const*distingProp = "";
-
+	unsigned long timeout = 0;
+	
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
 	if (strequ("-s", argv[nextarg]) || strequ("--server", argv[nextarg])) {
@@ -112,6 +114,9 @@ main(int argc, char *argv[])
 	} else if (strequ("-D", argv[nextarg]) ||
 		   strequ("--debug", argv[nextarg])) {
 	    debugMode = true;
+	} else if (strequ("-w", argv[nextarg]) ||
+			   strequ("--wait", argv[nextarg])) {
+	    timeout = atoi(argv[nextarg]);
 	} else {
 	    /* We are looking at the command to run, supposedly. */
 	    break;
@@ -158,11 +163,6 @@ main(int argc, char *argv[])
 	std::ostringstream clientReqStr;
 	clientReqStr << "host " << inet_ntoa(in) << " " << distingProp;
 	
-	char const* timeoutEnv = getenv("DMUCS_GETHOST_TIMEOUT");
-	unsigned long timeout = 0;
-	if(timeoutEnv) {
-		sscanf(timeoutEnv, "%lu", &timeout);
-	}
 	struct timeval begin, end;
 	gettimeofday(&begin, 0);
 		
@@ -267,5 +267,5 @@ void
 usage(const char *prog)
 {
     fprintf(stderr, "Usage: %s [-s|--server <server>] [-p|--port <port>] "
-	    "[-D|--debug] [-t|--type <typestr>] <command> [args] \n\n", prog);
+	    "[-D|--debug] [-t|--type <typestr>] [-w|--wait <timeout>] <command> [args] \n\n", prog);
 }
