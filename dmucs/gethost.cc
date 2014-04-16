@@ -27,6 +27,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <fstream>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -127,7 +128,8 @@ main(int argc, char *argv[])
 
 
     char remCompHostName[256];
-    if (!client_sock) {
+    std::string resolved_name;
+	if (!client_sock) {
 	fprintf(stderr, "WARNING: Could not connect to %s: %s\n",
 		serverName.str().c_str(), strerror(errno));
    	sprintf(remCompHostName,"0.0.0.0");
@@ -155,62 +157,75 @@ main(int argc, char *argv[])
 
 	std::ostringstream clientReqStr;
 	clientReqStr << "host " << inet_ntoa(in) << " " << distingProp;
-	DMUCS_DEBUG((stderr, "Writing -->%s<-- to the server\n",
-		     clientReqStr.str().c_str()));
-
-	Sputs((char *) clientReqStr.str().c_str(), client_sock);
-
-	DMUCS_DEBUG((stderr, "Calling Sgets\n"));
-	if (Sgets(remCompHostName, 256, client_sock) == NULL) {
-	    fprintf(stderr, "Got error from reading socket.\n");
-	    Sclose(client_sock);
-	    return -1;
+	
+	char const* timeoutEnv = getenv("DMUCS_GETHOST_TIMEOUT");
+	unsigned long timeout = 0;
+	if(timeoutEnv) {
+		sscanf(timeoutEnv, "%lu", &timeout);
 	}
-	DMUCS_DEBUG((stderr, "Got -->%s<-- from the server\n",
-		     remCompHostName));
-    }
+	struct timeval begin, end;
+	gettimeofday(&begin, 0);
+		
+	do {
+		DMUCS_DEBUG((stderr, "Writing -->%s<-- to the server\n",
+				 clientReqStr.str().c_str()));
 
-    /* If we get 0.0.0.0 that means there are no hosts left in the database. */
-    std::string resolved_name;
-    if (strncmp(remCompHostName, "0.0.0.0", strlen("0.0.0.0")) == 0) {
-	resolved_name = "";
-    } else {
+		Sputs((char *) clientReqStr.str().c_str(), client_sock);
 
-	/*
-	 * Convert the ip address to a hostname before putting it
-	 * in the environment as the value of DISTCC_HOSTS, so that
-	 * the output in the distccmon-text is nice.
-	 */
-	unsigned int cpuIpAddr = inet_addr(remCompHostName);
-	struct in_addr c;
-	c.s_addr = cpuIpAddr;
+		DMUCS_DEBUG((stderr, "Calling Sgets\n"));
+		if (Sgets(remCompHostName, 256, client_sock) == NULL) {
+			fprintf(stderr, "Got error from reading socket.\n");
+			Sclose(client_sock);
+			return -1;
+		}
+		DMUCS_DEBUG((stderr, "Got -->%s<-- from the server\n",
+				 remCompHostName));
 
-	getHostName(resolved_name, c);
+		/* If we get 0.0.0.0 that means there are no hosts left in the database. */
+		if (strncmp(remCompHostName, "0.0.0.0", strlen("0.0.0.0")) == 0) {
+			resolved_name = "";
+			if(timeout > 0) {
+				sleep(1);
+			}
+		} else {
+			/*
+			 * Convert the ip address to a hostname before putting it
+			 * in the environment as the value of DISTCC_HOSTS, so that
+			 * the output in the distccmon-text is nice.
+			 */
+			unsigned int cpuIpAddr = inet_addr(remCompHostName);
+			struct in_addr c;
+			c.s_addr = cpuIpAddr;
 
-	/*
-	 * Add /100 to the end of the DISTCC_HOSTS value.  This tells
-	 * distcc that there are 10 cpus on the machine, which should be
-	 * more than any machines already have.  Without this value, distcc
-	 * assumes there are most 4 cpus, and so will not put more than 4
-	 * compilations on that host at once, but instead, put the
-	 * compilations in BLOCKED state.
-	 *
-	 * NOTE: a better solution would be to read the hosts-info file
-	 * in this program and put the actual number of cpus after the '/'.
-	 * But, that is alot of work for this often-run program to do, so
-	 * for efficiency's sake we'll just do it this way.
-	 *
-	 * NOTE: even with a high value of 100 for the number of cpus,
-	 * we won't overload a machine with 100 compiles, because the
-	 * host-server (the 'dmucs' program) only gives out the host based
-	 * on the actual number of cpus on the host -- which it gets from
-	 * the hosts-info file.
-	 */
-	resolved_name += "/100";
-    }
+			getHostName(resolved_name, c);
 
+			/*
+			 * Add /100 to the end of the DISTCC_HOSTS value.  This tells
+			 * distcc that there are 10 cpus on the machine, which should be
+			 * more than any machines already have.  Without this value, distcc
+			 * assumes there are most 4 cpus, and so will not put more than 4
+			 * compilations on that host at once, but instead, put the
+			 * compilations in BLOCKED state.
+			 *
+			 * NOTE: a better solution would be to read the hosts-info file
+			 * in this program and put the actual number of cpus after the '/'.
+			 * But, that is alot of work for this often-run program to do, so
+			 * for efficiency's sake we'll just do it this way.
+			 *
+			 * NOTE: even with a high value of 100 for the number of cpus,
+			 * we won't overload a machine with 100 compiles, because the
+			 * host-server (the 'dmucs' program) only gives out the host based
+			 * on the actual number of cpus on the host -- which it gets from
+			 * the hosts-info file.
+			 */
+			resolved_name += "/100,lzo";
+		}
+		gettimeofday(&end, 0);
+	} while (resolved_name == "" && ((end.tv_sec-begin.tv_sec) > timeout));
+	}
+		
     std::ostringstream tmp;
-    tmp << "DISTCC_HOSTS=" << resolved_name << ",lzo";
+    tmp << "DISTCC_HOSTS=" << resolved_name;
     DMUCS_DEBUG((stderr, "tmp is -->%s<--\n", tmp.str().c_str()));
     if (putenv((char *) tmp.str().c_str()) != 0) {
 	fprintf(stderr, "Error putting DISTCC_HOSTS in the environment\n");
