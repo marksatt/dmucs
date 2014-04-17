@@ -239,6 +239,9 @@ parseResults(const char *resultStr)
                     hostname.erase(pos);
                 }
             }
+			else {
+				hostname = ipstr;
+			}
 
 	    /*
 	     * We collect each hostname based on its state, and add it
