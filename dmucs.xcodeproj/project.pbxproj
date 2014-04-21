@@ -331,7 +331,7 @@
 		308B377E17EA309700025EAC /* dmucs_host_state.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dmucs_host_state.h; sourceTree = "<group>"; };
 		308B377F17EA309700025EAC /* dmucs_hosts_file.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dmucs_hosts_file.cc; sourceTree = "<group>"; };
 		308B378017EA309700025EAC /* dmucs_hosts_file.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dmucs_hosts_file.h; sourceTree = "<group>"; };
-		308B378117EA309700025EAC /* dmucs_msg.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dmucs_msg.cc; sourceTree = "<group>"; };
+		308B378117EA309700025EAC /* dmucs_msg.cc */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp.preprocessed; path = dmucs_msg.cc; sourceTree = "<group>"; };
 		308B378217EA309700025EAC /* dmucs_msg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dmucs_msg.h; sourceTree = "<group>"; };
 		308B378317EA309700025EAC /* dmucs_pkt.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dmucs_pkt.cc; sourceTree = "<group>"; };
 		308B378417EA309700025EAC /* dmucs_pkt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dmucs_pkt.h; sourceTree = "<group>"; };
