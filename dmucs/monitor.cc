@@ -231,13 +231,7 @@ parseResults(const char *resultStr)
 	    struct hostent *he = gethostbyaddr((char *)&addr, sizeof(addr),
 					       AF_INET);
             if (he) {
-                /* Remove everything from the first . onward -- so we
-                   don't see the long domain name in the output. */
                 hostname = he->h_name;
-                size_t pos = hostname.find_first_of('.');
-                if (pos != std::string::npos) {
-                    hostname.erase(pos);
-                }
             }
 			else {
 				hostname = ipstr;
@@ -302,12 +296,6 @@ parseResults(const char *resultStr)
                   hname = ipName;
                 } else {
                   hname = he->h_name;
-                  /* Remove domain name from end of hostname. */
-				  size_t index = hname.find_first_of('.');
-				  if(index != std::string::npos)
-				  {
-				    hname.erase();
-				  }
                 }
 			
 #if __APPLE__

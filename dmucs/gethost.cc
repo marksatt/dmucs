@@ -116,6 +116,10 @@ main(int argc, char *argv[])
 	    debugMode = true;
 	} else if (strequ("-w", argv[nextarg]) ||
 			   strequ("--wait", argv[nextarg])) {
+		if (++nextarg >= argc) {
+			usage(argv[0]);
+			return -1;
+	    }
 	    timeout = atoi(argv[nextarg]);
 	} else {
 	    /* We are looking at the command to run, supposedly. */
@@ -243,7 +247,7 @@ main(int argc, char *argv[])
     if (forkret == 0) {
 	/* child process */
 	if (execvp(argv[nextarg], &argv[nextarg]) < 0) {
-	    fprintf(stderr, "execvp failed: err %s\n", strerror(errno));
+	    fprintf(stderr, "execvp %s failed: err %s\n", argv[nextarg], strerror(errno));
 	    return -1;
 	}
 	return 0;
