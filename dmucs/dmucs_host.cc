@@ -59,10 +59,14 @@ DmucsHost::createHost(const struct in_addr &ipAddr,
     DmucsHostsFile *hostsFile = DmucsHostsFile::getInstance(hostsInfoFile);
     int numCpus = 1;
     int powerIndex = 1;
-    hostsFile->getDataForHost(ipAddr, &numCpus, &powerIndex);
-    DmucsHost *newHost = new DmucsHost(ipAddr, dprop, numCpus, powerIndex);
+	DmucsHost *newHost = NULL;
+    
+	if(hostsFile->getDataForHost(ipAddr, &numCpus, &powerIndex))
+	{
+		DmucsHost *newHost = new DmucsHost(ipAddr, dprop, numCpus, powerIndex);
 
-    DmucsDb::getInstance()->addNewHost(newHost);
+		DmucsDb::getInstance()->addNewHost(newHost);
+	}
 
     return newHost;
 }

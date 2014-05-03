@@ -126,10 +126,11 @@ DmucsHostsFile::readFileIntoDb() const
 }
 
 
-void
+bool
 DmucsHostsFile::getDataForHost(const struct in_addr &ipAddr, int *numCpus,
 			       int *powerIndex) const
 {
+	bool found = false;
     if (hasFileChanged()) {
 	readFileIntoDb();
     }
@@ -141,10 +142,18 @@ DmucsHostsFile::getDataForHost(const struct in_addr &ipAddr, int *numCpus,
     *powerIndex = 1;
 
     host_info_db_iter_t itr = db_.find(ipAddr.s_addr);
+	if (itr == db_.end())
+	{
+		// Not found - try rereading the db & finding it again before assuming 1 CPU
+		readFileIntoDb();
+		itr = db_.find(ipAddr.s_addr);
+	}
     if (itr != db_.end()) {
-	*numCpus = itr->second.numCpus_;
-	*powerIndex = itr->second.powerIndex_;
-    } 
+		*numCpus = itr->second.numCpus_;
+		*powerIndex = itr->second.powerIndex_;
+		found = true;
+    }
+	return found;
 }
 
 

@@ -86,7 +86,7 @@ main(int argc, char *argv[])
     serverName << "@" << SERVER_MACH_NAME;
     int serverPortNum = SERVER_PORT_NUM;
     char const*distingProp = "";
-	unsigned long timeout = 0;
+	long timeout = 0;
 	
     int nextarg = 1;
     for (; nextarg < argc; nextarg++) {
@@ -225,7 +225,7 @@ main(int argc, char *argv[])
 			resolved_name += "/100,lzo";
 		}
 		gettimeofday(&end, 0);
-	} while (resolved_name == "" && ((end.tv_sec-begin.tv_sec) > timeout));
+	} while (resolved_name == "" && (timeout == -1 || ((end.tv_sec-begin.tv_sec) > timeout)));
 	}
 		
     std::ostringstream tmp;

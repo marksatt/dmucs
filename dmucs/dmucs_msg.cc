@@ -165,36 +165,43 @@ DmucsLdAvgMsg::handle(Socket *sock, const char *buf)
     DMUCS_DEBUG((stderr, "Got load average mesg\n"));
 
 	std::string hostname;
+	DmucsHost *host = NULL;
 	
     try {
-	DmucsHost *host = db->getHost(host_, dprop_);
+		host = db->getHost(host_, dprop_);
 		hostname = host->getName();
         host->updateTier(ldAvg1_, ldAvg5_, ldAvg10_);
-	/* If the host hasn't been explicitly made unavailable,
-	   then make it available.  If the host is overloaded
-           but isn't anymore, then make it available. */
+		/* If the host hasn't been explicitly made unavailable,
+		 then make it available.  If the host is overloaded
+		 but isn't anymore, then make it available. */
         if (host->isSilent() ||
             (host->isOverloaded() && host->getTier() != 0)) {
-	    host->avail();      // make sure the host is available
-	}
+			host->avail();      // make sure the host is available
+		}
     } catch (DmucsHostNotFound &e) {
-	DmucsHost *h = DmucsHost::createHost(host_, dprop_, hostsInfoFile);
-	hostname = h->getName();
-	h->updateTier(ldAvg1_, ldAvg5_, ldAvg10_);
-	fprintf(stderr, "New host available: %s/%d, tier %d, type %s\n",
-		h->getName().c_str(), h->getNumCpus(), h->getTier(),
-		dprop2cstr(dprop_));
+		host = DmucsHost::createHost(host_, dprop_, hostsInfoFile);
+		if(host)
+		{
+			hostname = host->getName();
+			host->updateTier(ldAvg1_, ldAvg5_, ldAvg10_);
+			fprintf(stderr, "New host available: %s/%d, tier %d, type %s\n",
+					host->getName().c_str(), host->getNumCpus(), host->getTier(),
+					dprop2cstr(dprop_));
+		}
     } catch (...) {
     }
 	
 #if __APPLE__
-	NSDistributedNotificationCenter* Notifier = [NSDistributedNotificationCenter defaultCenter];
-	NSString* HostName = [NSString stringWithUTF8String: hostname.c_str()];
-	NSNumber* LoadAvg1 = [NSNumber numberWithFloat:ldAvg1_];
-	NSNumber* LoadAvg5 = [NSNumber numberWithFloat:ldAvg5_];
-	NSNumber* LoadAvg10 = [NSNumber numberWithFloat:ldAvg10_];
-	NSDictionary* Info = [NSDictionary dictionaryWithObjectsAndKeys:HostName, @"HostName", LoadAvg1, @"LoadAvg1", LoadAvg5, @"LoadAvg5", LoadAvg10, @"LoadAvg10", nil];
-	[Notifier postNotificationName:@"dmucsLoadAvg" object:@"DMUCS" userInfo:Info options:(NSUInteger)NSNotificationPostToAllSessions];
+	if(host)
+	{
+		NSDistributedNotificationCenter* Notifier = [NSDistributedNotificationCenter defaultCenter];
+		NSString* HostName = [NSString stringWithUTF8String: hostname.c_str()];
+		NSNumber* LoadAvg1 = [NSNumber numberWithFloat:ldAvg1_];
+		NSNumber* LoadAvg5 = [NSNumber numberWithFloat:ldAvg5_];
+		NSNumber* LoadAvg10 = [NSNumber numberWithFloat:ldAvg10_];
+		NSDictionary* Info = [NSDictionary dictionaryWithObjectsAndKeys:HostName, @"HostName", LoadAvg1, @"LoadAvg1", LoadAvg5, @"LoadAvg5", LoadAvg10, @"LoadAvg10", nil];
+		[Notifier postNotificationName:@"dmucsLoadAvg" object:@"DMUCS" userInfo:Info options:(NSUInteger)NSNotificationPostToAllSessions];
+	}
 #endif
     removeFd(sock);
 }

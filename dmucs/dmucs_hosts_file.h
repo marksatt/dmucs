@@ -37,7 +37,7 @@ class DmucsHostsFile
 public:
 
     static DmucsHostsFile *getInstance(const std::string &hostsInfoFile);
-    void getDataForHost(const struct in_addr &ipAddr, int *numCpus,
+    bool getDataForHost(const struct in_addr &ipAddr, int *numCpus,
 			int *powerIndex) const;
 
     /*
