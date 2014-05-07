@@ -225,7 +225,7 @@ main(int argc, char *argv[])
 			resolved_name += "/100,lzo";
 		}
 		gettimeofday(&end, 0);
-	} while (resolved_name == "" && (timeout == -1 || ((end.tv_sec-begin.tv_sec) > timeout)));
+	} while (resolved_name.empty() && (timeout == -1 || ((end.tv_sec-begin.tv_sec) > timeout)));
 	}
 		
     std::ostringstream tmp;
