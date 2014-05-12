@@ -69,7 +69,7 @@ main(int argc, char *argv[])
      * o Close the client socket.
      */
 
-#if (! defined (__CYGWIN__) && ! defined(__FreeBSD__))
+#if (! defined (__CYGWIN__) && ! defined(__FreeBSD__) && !defined(__APPLE__) )
     /* install a SIGCHLD handler */
     sigset(SIGCHLD, sigchld_handler);
 #endif
@@ -250,6 +250,7 @@ main(int argc, char *argv[])
 	    fprintf(stderr, "execvp %s failed: err %s\n", argv[nextarg], strerror(errno));
 	    return -1;
 	}
+	    fprintf(stderr, "gethost: finished\n");
 	return 0;
     } else if (forkret < 0) {
 	fprintf(stderr, "Failed to fork a process!\n");
@@ -258,7 +259,11 @@ main(int argc, char *argv[])
 
     /* parent process -- just wait for the child */
     int status = 0;
-    (void) wait(&status);
+    pid_t pid = -1;
+    do
+    {
+        pid = waitpid(forkret, &status, 0);
+    } while (pid == -1 && errno == EINTR);
 
     Sclose(client_sock);
 
